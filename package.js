@@ -12,7 +12,8 @@ Package.onUse(function(api) {
     'coffeescript',
     'underscore',
     'ejson',
-    'tracker'
+    'tracker',
+    'reactive-var'
   ], ['client', 'server']);
 
   api.addFiles([

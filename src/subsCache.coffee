@@ -34,6 +34,12 @@ class @SubsCache
   ready: ->
     @allReady.get()
 
+  onReady: (callback) ->
+    Tracker.autorun (c) =>
+      if @ready()
+        c.stop()
+        callback()
+
   clear: ->
     _.values(@cache).map((sub)-> sub.stopNow())
 
@@ -63,6 +69,14 @@ class @SubsCache
           when: null
           ready: -> 
             @sub.ready()
+          onReady: (callback)->
+            if @ready() 
+              Tracker.nonreactive -> callback()
+            else
+              Tracker.autorun (c) =>
+                if @ready()
+                  c.stop()
+                  Tracker.nonreactive -> callback()
           start: ->
             # so we know what to throw out when the cache overflows
             @when = Date.now() 
@@ -73,7 +87,7 @@ class @SubsCache
           stop: -> @delayedStop()
           delayedStop: ->
             if expireTime >= 0
-              @timerId = Meteor.setTimeout(@stopNow.bind(this), expireTime)
+              @timerId = Meteor.setTimeout(@stopNow.bind(this), expireTime*1000*60)
           restart: ->
             # if we'are restarting, then stop the timer
             Meteor.clearTimeout(@timerId)
@@ -89,7 +103,9 @@ class @SubsCache
           if numSubs >= @cacheLimit
             needToDelete = numSubs - @cacheLimit + 1
             for i in [0...needToDelete]
+              debug "overflow", allSubs[i]
               allSubs[i].stopNow()
+
 
 
         cache[hash] = cachedSub
