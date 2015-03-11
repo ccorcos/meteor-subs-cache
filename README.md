@@ -1,7 +1,16 @@
 # Meteor Subscription Cache
 
-This package is similar to [`meteorhacks:subs-manager`](https://github.com/meteorhacks/subs-manager). The goal is to cache subscriptions. Suppose you are subscribing to a post using `sub = Meteor.subscribe('post', postId)`. When the user clicks on another page, you typically want to stop the subscription (unsubscribe) to clean up using `subs.stop()`. But what if the user clicks back immediately after clicking something else? This is why you use `SubsCache.subscribe` to cache subscriptions.
+This package is similar to [`meteorhacks:subs-manager`](https://github.com/meteorhacks/subs-manager). The goal is to cache subscriptions. 
 
+Suppose you are subscribing to a post:
+
+    sub = Meteor.subscribe('post', postId)
+
+When the user clicks to another page, you typically want to stop the subscription 
+
+    subs.stop()
+
+This will clean up and throw away the data you don't need. But what if the user clicks back immediately after you stopped the subscription? Now you have resubscribe to the same data. This is a waste. SubsCache allows you to cache your subscriptions. When you stop a SubCache subscription, it will start a setTimeout and stop the subscription after `expireAfter` minutes. If you resubscribe to the same subscription before the cached subscription expired, then the setTimeout is cleared and the subscription is restored.
 
 ## `meteorhacks:subs-manager` comparison
 
