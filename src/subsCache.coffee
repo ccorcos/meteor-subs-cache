@@ -10,6 +10,8 @@ Tracker.Computation.prototype.onStop = (func) ->
   checkNextInvalidate()
   return
 
+# debug = (args...) -> console.log.apply(console, args)
+debug = (args...) -> return
 
 class @SubsCache
   constructor: (obj) ->
@@ -29,12 +31,14 @@ class @SubsCache
     @cache = {}
     @allReady = new ReactiveVar(true)
 
+  ready: ->
+    @allReady.get()
+
   clear: ->
     _.values(@cache).map((sub)-> sub.stopNow())
 
   subscribe: (args...) ->
-    expireTime = @expireAfter
-    args.unshift(subscribe)
+    args.unshift(@expireAfter)
     @subscribeFor.apply(this, args)
 
   subscribeFor: (expireTime, args...) ->
@@ -64,19 +68,20 @@ class @SubsCache
             @when = Date.now() 
             # if the computation stops, then delayedStop
             c = Tracker.currentComputation
-            c?.onStop => @delayedStop() 
+            c?.onStop => 
+              @delayedStop()
           stop: -> @delayedStop()
           delayedStop: ->
             if expireTime >= 0
-              @timerId = Meteor.setTimeout(@stopNow, expireTime)
+              @timerId = Meteor.setTimeout(@stopNow.bind(this), expireTime)
           restart: ->
             # if we'are restarting, then stop the timer
             Meteor.clearTimeout(@timerId)
             @start()
-          stopNow: -> 
+          stopNow: ->
             @sub.stop()
             delete cache[@hash]
-      
+
         # delete the oldest subscription if the cache has overflown
         if @cacheLimit > 0
           allSubs = _.sortBy(_.values(cache), (x) -> x.when)
@@ -85,6 +90,7 @@ class @SubsCache
             needToDelete = numSubs - @cacheLimit + 1
             for i in [0...needToDelete]
               allSubs[i].stopNow()
+
 
         cache[hash] = cachedSub
         cachedSub.start()
@@ -96,3 +102,5 @@ class @SubsCache
           subs = _.values(@cache)
           if subs.length > 0
             @allReady.set subs.map((x) -> x.ready()).reduce((a,b) -> a and b)
+
+      return cache[hash]
