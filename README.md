@@ -39,8 +39,18 @@ Initialize with optional `expireAfter` (default 5) and `cacheLimit` (default 10)
 
 - `subsCache.allReady()` tells you if all subscriptions in the cache are ready
 
-- `subsCache.subscribe(...)` creates a subscription just like `Meteor.subscribe`
+- `sub = subsCache.subscribe(...)` creates a subscription just like `Meteor.subscribe`
 
-- `subsCache.subscribeFor(expireIn, ...)` allow you to set the expiration other than the defualt.
+- `sub = subsCache.subscribeFor(expireIn, ...)` allow you to set the expiration other than the defualt.
 
 - `subsCache.clear()` will stop all subscription immediately
+
+- `subsCache.onReady(func)` will call a function once all subscription are ready
+
+- `sub.stop()` will cache a subscription and stop after `expireAfter` unless restarted with `sub.restart()`
+
+- `sub.stopNow()` will stop a subscription immediately and remove it from the cache.
+
+- `sub.ready()` tells you if an individual subscription is ready
+
+- `sub.onReady(func)` will call a function once an individual subscription is ready
