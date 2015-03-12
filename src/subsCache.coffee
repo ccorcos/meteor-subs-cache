@@ -15,7 +15,11 @@ debug = (args...) -> return
 
 class @SubsCache
   constructor: (obj) ->
-    {expireAfter, cacheLimit} = obj
+    expireAfter = undefined
+    cacheLimit = undefined
+    if obj
+      {expireAfter, cacheLimit} = obj
+      
     # defaults
     if expireAfter is undefined
       expireAfter = 5
@@ -25,6 +29,7 @@ class @SubsCache
     if cacheLimit is 0
       console.warn "cacheLimit cannot be zero!"
       cacheLimit = 1
+
     # initialize instance variables
     @expireAfter = expireAfter
     @cacheLimit = cacheLimit
