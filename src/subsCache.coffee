@@ -1,19 +1,9 @@
-# Fires a function when computation stops. 
-Tracker.Computation.prototype.onStop = (func) ->
-  checkNextInvalidate = =>
-    this.onInvalidate (comp) ->
-      if comp.stopped
-        func()
-      else
-        Tracker.afterFlush(checkNextInvalidate)
-        
-  checkNextInvalidate()
-  return
-
 # debug = (args...) -> console.log.apply(console, args)
 debug = (args...) -> return
 
 class @SubsCache
+  @caches: []
+  
   constructor: (obj) ->
     expireAfter = undefined
     cacheLimit = undefined
@@ -35,6 +25,7 @@ class @SubsCache
     @cacheLimit = cacheLimit
     @cache = {}
     @allReady = new ReactiveVar(true)
+    SubsCache.caches.push(@)
 
   ready: ->
     @allReady.get()
@@ -44,6 +35,9 @@ class @SubsCache
       if @ready()
         c.stop()
         callback()
+
+  @clearAll: ->
+    @caches.map (s) -> s.clear()
 
   clear: ->
     _.values(@cache).map((sub)-> sub.stopNow())
@@ -87,7 +81,7 @@ class @SubsCache
             @when = Date.now() 
             # if the computation stops, then delayedStop
             c = Tracker.currentComputation
-            c?.onStop => 
+            c?.onInvalidate => 
               @delayedStop()
           stop: -> @delayedStop()
           delayedStop: ->

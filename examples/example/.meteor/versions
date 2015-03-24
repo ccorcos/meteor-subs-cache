@@ -7,7 +7,7 @@ blaze@2.0.4
 blaze-tools@1.0.2
 boilerplate-generator@1.0.2
 callback-hook@1.0.2
-ccorcos:subs-cache@0.0.1
+ccorcos:subs-cache@0.0.3
 check@1.0.4
 coffeescript@1.0.5
 ddp@1.0.14
