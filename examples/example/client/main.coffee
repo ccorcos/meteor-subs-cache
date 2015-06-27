@@ -38,3 +38,4 @@ Meteor.startup ->
                   console.log "2 seconds later...", Posts.find().count()
                   delay 6, ->
                     console.log "8 seconds later...", Posts.find().count()
+                    testCallbacks()
