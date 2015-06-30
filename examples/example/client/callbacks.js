@@ -3,7 +3,7 @@ testCallbacks = function(done) {
 
 	/** Record that a function was called. */
 	var record = function(o, f) {
-		return function() { o[f] = true; };
+		return function() { o[f] = EJSON.stringify(arguments); };
 	};
 
 	/**
@@ -35,11 +35,37 @@ testCallbacks = function(done) {
 	};
 
 	/**
-	 * Test two idenical concurrent subscriptions' onStop callbacks.
+	 * Test two identical concurrent subscriptions' onStop callbacks.
 	 */
 	var testOnStopCallbacks = function(subscriber, results, done) {
 		var s1 = subscriber.subscribe("posts", 3, {onStop: record(results, "onstop 1")});
 		var s2 = subscriber.subscribe("posts", 3, {onStop: record(results, "onstop 2")});
+		setTimeout(function(){
+			s1.stop();
+			s2.stop();
+			setTimeout(done, 1000);
+		}, 1000);
+	};
+
+	/**
+	 * Test two identical concurrent subscriptions' onStop callbacks' error argument.
+	 */
+	var testOnStopCallbackError = function(subscriber, results, done) {
+		var s1 = subscriber.subscribe("posts", "error", {onStop: record(results, "onstop error 1")});
+		var s2 = subscriber.subscribe("posts", "error", {onStop: record(results, "onstop error 2")});
+		setTimeout(function(){
+			s1.stop();
+			s2.stop();
+			setTimeout(done, 1000);
+		}, 1000);
+	};
+
+	/**
+	 * Test two identical concurrent subscriptions' onError callbacks.
+	 */
+	var testOnErrorCallback = function(subscriber, results, done) {
+		var s1 = subscriber.subscribe("posts", "error", {onError: record(results, "onerror 1")});
+		var s2 = subscriber.subscribe("posts", "error", {onError: record(results, "onerror 2")});
 		setTimeout(function(){
 			s1.stop();
 			s2.stop();
@@ -58,12 +84,20 @@ testCallbacks = function(done) {
 				testObjectCallbackSyntaxOnReady(new SubsCache(cacheSettings), actual, function() {
 					testOnStopCallbacks(Meteor, desired, function(){
 						testOnStopCallbacks(new SubsCache(cacheSettings), actual, function() {
+							testOnStopCallbackError(Meteor, desired, function(){
+								testOnStopCallbackError(new SubsCache(cacheSettings), actual, function() {
+									testOnErrorCallback(Meteor, desired, function(){
+										testOnErrorCallback(new SubsCache(cacheSettings), actual, function() {
 
-							console.log("Desired behavior", desired);
-							console.log("SubsCache behavior", actual);
-							console.log("Success is", _.isEqual(desired, actual));
+											console.log("Desired behavior", desired);
+											console.log("SubsCache behavior", actual);
+											console.log("Success is", _.isEqual(desired, actual));
 
-							if (_.isFunction(done)) done();
+											if (_.isFunction(done)) done();
+										});
+									});
+								});
+							});
 						});
 					});
 				});
