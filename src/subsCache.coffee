@@ -14,7 +14,6 @@ hasCallbacks = (args) ->
   # https://github.com/meteor/meteor/blob/master/packages/ddp/livedata_connection.js
   if args.length
     lastArg = args[args.length-1]
-    console.log lastArg.onReady
     _.isFunction(lastArg) or
       (lastArg and _.any([
         lastArg.onReady,
