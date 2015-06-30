@@ -1,12 +1,41 @@
 # debug = (args...) -> console.log.apply(console, args)
 debug = (args...) -> return
 
-makeCallbackDelegatorFn = (cachedSub, listName)->
+makeDelegatingCallbackFn = (cachedSub, callbackName)->
   ->
     originalThis = @
     originalArgs = arguments
-    _.each cachedSub[listName], (f)->
-      f.apply originalThis, originalArgs
+    _.each cachedSub.callbacks, (cbs)->
+      if _.isFunction cbs[callbackName]
+        cbs[callbackName].apply originalThis, originalArgs
+
+hasCallbacks = (args) ->
+  # this logic is copied from Meteor.subscribe found in
+  # https://github.com/meteor/meteor/blob/master/packages/ddp/livedata_connection.js
+  if args.length
+    lastArg = args[args.length-1]
+    console.log lastArg.onReady
+    _.isFunction(lastArg) or
+      (lastArg and _.any([
+        lastArg.onReady,
+        lastArg.onError,
+        lastArg.onStop
+      ], _.isFunction))
+
+withoutCallbacks = (args) ->
+  if hasCallbacks args
+    args[..-1] # TODO check this
+  else
+    args[..]
+
+callbacksFromArgs = (args) ->
+  if hasCallbacks args
+    if _.isFunction args[args.length-1]
+      onReady: args[args.length-1]
+    else
+      args[args.length-1]
+  else
+    {}
 
 class @SubsCache
   @caches: []
@@ -58,34 +87,14 @@ class @SubsCache
       # If we're using fast-render for SSR
       Meteor.subscribe.apply(Meteor.args)
     else
-      # extract any callbacks fom the arguments
-      # this logic is copied from Meteor.subscribe found in
-      # https://github.com/meteor/meteor/blob/master/packages/ddp/livedata_connection.js
-      callbacks = {}
-      if args.length
-        [..., lastArg] = args
-        if _.isFunction(lastArg) # onReady callback
-          callbacks.onReady = args.pop()
-        else if lastArg and _.any([
-            lastArg.onReady,
-            lastArg.onError,
-            lastArg.onStop
-          ], _.isFunction)
-          callbacks = args.pop()
-
-      hash = EJSON.stringify(args)
+      hash = EJSON.stringify(withoutCallbacks args)
       cache = @cache
       if hash of cache
         # if we find this subscription in the cache, then rescue the callbacks
         # and restart the cached subscription
-        if _.isFunction callbacks.onReady
-          cache[hash].onReady callbacks.onReady
-        if _.isFunction callbacks.onError
-          cache[hash].errorCallbacks.push callbacks.onError
-        if _.isFunction callbacks.onStop
-          cache[hash].stopCallbacks.push callbacks.onStop
+        if hasCallbacks args
+          cache[hash].registerCallbacks callbacksFromArgs args
         cache[hash].restart()
-
       else
         # create an object to represent this subscription in the cache
         cachedSub =
@@ -94,8 +103,7 @@ class @SubsCache
           timerId: null
           expireTime: expireTime
           when: null
-          stopCallbacks: []
-          errorCallbacks: []
+          callbacks: []
           ready: ->
             @sub.ready()
           onReady: (callback)->
@@ -106,6 +114,14 @@ class @SubsCache
                 if @ready()
                   c.stop()
                   Tracker.nonreactive -> callback()
+          registerCallbacks: (callbacks)->
+            if _.isFunction callbacks.onReady
+              @onReady callbacks.onReady
+            @callbacks.push callbacks
+          getDelegatingCallbacks: ->
+            # make functions that delegate to all register callbacks
+            onError: makeDelegatingCallbackFn @, 'onError'
+            onStop: makeDelegatingCallbackFn @, 'onStop'
           start: ->
             # so we know what to throw out when the cache overflows
             @when = Date.now() 
@@ -125,21 +141,15 @@ class @SubsCache
             @sub.stop()
             delete cache[@hash]
 
-        # The semantics of an onReady callback are handled by cachedSub.onReady, so we
-        # use that for future such callbacks. We replace the other callbacks with a
-        # delegation function that calls all of the callbacks of that type that we may
-        # be given in the future.
-        if _.isFunction callbacks.onError
-          cachedSub.errorCallbacks.push callbacks.onError
-        if _.isFunction callbacks.onStop
-          cachedSub.stopCallbacks.push callbacks.onStop
-        callbacks.onError = makeCallbackDelegatorFn cachedSub, "errorCallbacks"
-        callbacks.onStop = makeCallbackDelegatorFn cachedSub, "stopCallbacks"
-        args.push callbacks
-
+        # create the subscription, giving it delegating callbacks
+        newArgs = withoutCallbacks args
+        newArgs.push cachedSub.getDelegatingCallbacks()
         # make sure the subscription won't be stopped if we are in a reactive computation
-        sub = Tracker.nonreactive -> Meteor.subscribe.apply(Meteor, args)
-        cachedSub.sub = sub
+        cachedSub.sub = Tracker.nonreactive -> Meteor.subscribe.apply(Meteor, newArgs)
+
+        # TODO can Meteor.subscribe call an onError callback synchronously? If so, we've missed the boat:
+        if hasCallbacks args
+          cachedSub.registerCallbacks callbacksFromArgs args
 
         # delete the oldest subscription if the cache has overflown
         if @cacheLimit > 0
