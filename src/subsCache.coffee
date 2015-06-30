@@ -9,7 +9,7 @@ makeDelegatingCallbackFn = (cachedSub, callbackName)->
       if _.isFunction cbs[callbackName]
         cbs[callbackName].apply originalThis, originalArgs
 
-hasCallbacks = (args) ->
+hasCallbacks = (args)->
   # this logic is copied from Meteor.subscribe found in
   # https://github.com/meteor/meteor/blob/master/packages/ddp/livedata_connection.js
   if args.length
@@ -21,13 +21,13 @@ hasCallbacks = (args) ->
         lastArg.onStop
       ], _.isFunction))
 
-withoutCallbacks = (args) ->
+withoutCallbacks = (args)->
   if hasCallbacks args
-    args[..-1] # TODO check this
+    args[..-1]
   else
     args[..]
 
-callbacksFromArgs = (args) ->
+callbacksFromArgs = (args)->
   if hasCallbacks args
     if _.isFunction args[args.length-1]
       onReady: args[args.length-1]
@@ -146,7 +146,6 @@ class @SubsCache
         # make sure the subscription won't be stopped if we are in a reactive computation
         cachedSub.sub = Tracker.nonreactive -> Meteor.subscribe.apply(Meteor, newArgs)
 
-        # TODO can Meteor.subscribe call an onError callback synchronously? If so, we've missed the boat:
         if hasCallbacks args
           cachedSub.registerCallbacks callbacksFromArgs args
 
