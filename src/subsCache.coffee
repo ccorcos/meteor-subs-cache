@@ -63,6 +63,7 @@ class @SubsCache
         cachedSub =
           sub: sub
           hash: hash
+          compsCount: 0
           timerId: null
           expireTime: expireTime
           when: null
@@ -79,6 +80,9 @@ class @SubsCache
           start: ->
             # so we know what to throw out when the cache overflows
             @when = Date.now() 
+            # we need to count the number of computations that have called
+            # this subscription so that we don't release it too early
+            @compsCount += 1
             # if the computation stops, then delayedStop
             c = Tracker.currentComputation
             c?.onInvalidate => 
@@ -92,8 +96,10 @@ class @SubsCache
             Meteor.clearTimeout(@timerId)
             @start()
           stopNow: ->
-            @sub.stop()
-            delete cache[@hash]
+            @compsCount -= 1
+            if @compsCount <= 0
+              @sub.stop()
+              delete cache[@hash]
 
         # delete the oldest subscription if the cache has overflown
         if @cacheLimit > 0
