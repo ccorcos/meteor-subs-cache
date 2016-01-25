@@ -96,6 +96,8 @@ class @SubsCache
           expireTime: expireTime
           when: null
           hooks: []
+          callbacks: []
+          count: 0
           ready: ->
             @sub.ready()
           onReady: (callback)->
@@ -130,13 +132,18 @@ class @SubsCache
             c = Tracker.currentComputation
             c?.onInvalidate => 
               @delayedStop()
-          stop: -> @delayedStop()
+          stop: ->
+            if @count <= 0
+              @delayedStop()
+            else
+              @count--
           delayedStop: ->
             if expireTime >= 0
               @timerId = Meteor.setTimeout(@stopNow.bind(this), expireTime*1000*60)
           restart: ->
             # if we'are restarting, then stop the timer
-            Meteor.clearTimeout(@timerId)
+            clearTimeout(@timerId)
+            @count++
             @start()
           stopNow: ->
             @sub.stop()
