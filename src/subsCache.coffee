@@ -97,7 +97,7 @@ class @SubsCache
           when: null
           hooks: []
           callbacks: []
-          count: 0
+          copies: 1
           ready: ->
             @sub.ready()
           onReady: (callback)->
@@ -133,17 +133,16 @@ class @SubsCache
             c?.onInvalidate => 
               @delayedStop()
           stop: ->
-            if @count <= 0
+            @copies--
+            if @copies == 0
               @delayedStop()
-            else
-              @count--
           delayedStop: ->
             if expireTime >= 0
               @timerId = Meteor.setTimeout(@stopNow.bind(this), expireTime*1000*60)
           restart: ->
             # if we'are restarting, then stop the timer
             clearTimeout(@timerId)
-            @count++
+            @copies++
             @start()
           stopNow: ->
             @sub.stop()
