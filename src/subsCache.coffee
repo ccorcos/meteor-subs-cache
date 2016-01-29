@@ -96,7 +96,6 @@ class @SubsCache
           expireTime: expireTime
           when: null
           hooks: []
-          callbacks: []
           copies: 1
           ready: ->
             @sub.ready()
@@ -141,7 +140,7 @@ class @SubsCache
               @timerId = Meteor.setTimeout(@stopNow.bind(this), expireTime*1000*60)
           restart: ->
             # if we'are restarting, then stop the timer
-            clearTimeout(@timerId)
+            Meteor.clearTimeout(@timerId)
             @copies++
             @start()
           stopNow: ->
