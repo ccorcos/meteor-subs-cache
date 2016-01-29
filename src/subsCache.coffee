@@ -96,7 +96,7 @@ class @SubsCache
           expireTime: expireTime
           when: null
           hooks: []
-          copies: 1
+          copies: 0
           ready: ->
             @sub.ready()
           onReady: (callback)->
@@ -126,11 +126,14 @@ class @SubsCache
                   hookDict[hookName].apply originalThis, originalArgs
           start: ->
             # so we know what to throw out when the cache overflows
-            @when = Date.now() 
-            # if the computation stops, then delayedStop
+            @when = Date.now()
+            @copies++
+            # to mirror the normal subscribe behaviour (and because we hide the real
+            # subscribe call from Tracker) we need to stop the sub when the current
+            # computation stops
             c = Tracker.currentComputation
             c?.onInvalidate => 
-              @delayedStop()
+              @stop()
           stop: ->
             @copies--
             if @copies == 0
@@ -141,7 +144,6 @@ class @SubsCache
           restart: ->
             # if we'are restarting, then stop the timer
             Meteor.clearTimeout(@timerId)
-            @copies++
             @start()
           stopNow: ->
             @sub.stop()
