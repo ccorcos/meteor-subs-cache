@@ -31,8 +31,9 @@ Meteor.startup ->
               c.stopNow()
               delay 1, ->
                 console.log "number of posts should be 1", Posts.find().count()
-                # only one left in the cache
+                # only "['posts', 1]" left in the cache
                 a.stop()
+                b.stop()
                 console.log "number of posts should be 1 until 6 seconds later"
                 delay 2, ->
                   console.log "2 seconds later...", Posts.find().count()

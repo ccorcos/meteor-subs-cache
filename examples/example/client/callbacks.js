@@ -91,7 +91,7 @@ testCallbacks = function(done) {
 
 											console.log("Desired behavior", desired);
 											console.log("SubsCache behavior", actual);
-											console.log("Success is", _.isEqual(desired, actual));
+											console.log("Callback test success is", _.isEqual(desired, actual));
 
 											if (_.isFunction(done)) done();
 										});
