@@ -20,4 +20,6 @@ Package.onUse(function(api) {
     'src/subsCache.coffee',
   ], ['client', 'server']);
 
+
+  api.export("SubsCache", ['client', 'server']);
 });
