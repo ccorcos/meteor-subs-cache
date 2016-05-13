@@ -137,7 +137,7 @@ class @SubsCache
           stop: -> @delayedStop()
           delayedStop: ->
             if expireTime >= 0
-              @timerId = Meteor.setTimeout(@stopNow.bind(this), expireTime*1000*60)
+              @timerId = setTimeout(Meteor.bindEnvironment(@stopNow.bind(this)), expireTime*1000*60)
           restart: ->
             # if we'are restarting, then stop the timer
             Meteor.clearTimeout(@timerId)
