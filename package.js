@@ -18,6 +18,7 @@ Package.onUse(function(api) {
 
   api.addFiles([
     'src/subsCache.coffee',
+    'src/global_variables.js'
   ], ['client', 'server']);
 
 
