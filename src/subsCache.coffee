@@ -51,12 +51,15 @@ class @SubsCache
     # initialize instance variables
     @expireAfter = expireAfter
     @cacheLimit = cacheLimit
-    @cache = {}
-    @allReady = new ReactiveVar(true)
+    @cache = new ReactiveVar({})
     SubsCache.caches.push(@)
 
   ready: ->
-    @allReady.get()
+    subs = _.values(@cache.get())
+    if subs.length > 0
+      return subs.map((x) -> x.ready()).reduce((a,b) -> a and b)
+    else
+      return true
 
   onReady: (callback) ->
     Tracker.autorun (c) =>
@@ -68,7 +71,7 @@ class @SubsCache
     @caches.map (s) -> s.clear()
 
   clear: ->
-    _.values(@cache).map((sub)-> sub.stopNow())
+    _.values(Tracker.nonreactive => @cache.get()).map((sub)-> sub.stopNow())
 
   subscribe: (args...) ->
     args.unshift(@expireAfter)
@@ -80,7 +83,7 @@ class @SubsCache
       Meteor.subscribe.apply(Meteor.args)
     else
       hash = EJSON.stringify(withoutCallbacks args)
-      cache = @cache
+      cache = Tracker.nonreactive => @cache.get()
       if hash of cache
         # if we find this subscription in the cache, then rescue the callbacks
         # and restart the cached subscription
@@ -174,12 +177,5 @@ class @SubsCache
         cache[hash] = cachedSub
         cachedSub.start()
 
-        # reactively set the allReady reactive variable
-        @allReadyComp?.stop() 
-        Tracker.autorun (c) =>
-          @allReadyComp = c
-          subs = _.values(@cache)
-          if subs.length > 0
-            @allReady.set subs.map((x) -> x.ready()).reduce((a,b) -> a and b)
-
+      @cache.set(cache)
       return cache[hash]
