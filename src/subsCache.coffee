@@ -73,6 +73,9 @@ class @SubsCache
   clear: ->
     _.values(Tracker.nonreactive => @cache.get()).map((sub)-> sub.stopNow())
 
+  stop: ->
+    _.values(Tracker.nonreactive => @cache.get()).map (s) -> s.stop()
+
   subscribe: (args...) ->
     args.unshift(@expireAfter)
     @subscribeFor.apply(this, args)
