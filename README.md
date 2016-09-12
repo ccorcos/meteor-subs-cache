@@ -1,12 +1,12 @@
-# Meteor Subscription Cache
+# Meteor Subscription Cache [DEPRECATED]
 
-This package is similar to [`meteorhacks:subs-manager`](https://github.com/meteorhacks/subs-manager). The goal is to cache subscriptions. 
+This package is similar to [`meteorhacks:subs-manager`](https://github.com/meteorhacks/subs-manager). The goal is to cache subscriptions.
 
 Suppose you are subscribing to a post:
 
     sub = Meteor.subscribe('post', postId)
 
-When the user clicks to another page, you typically want to stop the subscription 
+When the user clicks to another page, you typically want to stop the subscription
 
     subs.stop()
 
@@ -30,7 +30,7 @@ This will clean up and throw away the data you don't need. But what if the user 
 
     meteor add ccorcos:subs-cache
 
-Initialize with optional `expireAfter` (default 5) and `cacheLimit` (default 10). `expireAfter` is the number of minutes after a subscription is stopped without having been restarted before truely stopping it. If set to -1, the subscription will never expire. `cacheLimit` is the max number of subscriptions to cache. Set to -1 for unlimited capacity. 
+Initialize with optional `expireAfter` (default 5) and `cacheLimit` (default 10). `expireAfter` is the number of minutes after a subscription is stopped without having been restarted before truely stopping it. If set to -1, the subscription will never expire. `cacheLimit` is the max number of subscriptions to cache. Set to -1 for unlimited capacity.
 
     subsCache = new SubsCache({
       expireAter: 5,  // minutes
