@@ -29,7 +29,7 @@ callbacksFromArgs = (args)->
   else
     {}
 
-class @SubsCache
+class SubsCache
   @caches: []
   
   constructor: (obj) ->
