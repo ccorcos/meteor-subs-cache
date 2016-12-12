@@ -1,4 +1,4 @@
-# Meteor Subscription Cache [MAINTAINER WANTED]
+# Meteor Subscription Cache
 
 This package is similar to [`meteorhacks:subs-manager`](https://github.com/meteorhacks/subs-manager). The goal is to cache subscriptions.
 
