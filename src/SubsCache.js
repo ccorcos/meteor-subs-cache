@@ -57,7 +57,7 @@ SubsCache = function(expireAfter, cacheLimit) {
   }
 
   this.subscribe = function(...args) {
-    Logger.log('SubsCache - subscribe',args);
+    console.log('SubsCache - subscribe',args);
     args.unshift(this.expireAfter);
     return this.subscribeFor.apply(this, args);
   }
@@ -140,7 +140,7 @@ SubsCache = function(expireAfter, cacheLimit) {
           }
         },
         stop: function() {
-          Logger.log('SubsCache - stop: ' + this.hash);
+          console.log('SubsCache - stop: ' + this.hash);
           if (this.expireTime >= 0) {
             this.timerId = setTimeout(this.stopNow.bind(this), this.expireTime*1000*60);
           }
@@ -156,12 +156,12 @@ SubsCache = function(expireAfter, cacheLimit) {
         stopNow: function() {
           this.count -= 1;
           if (this.count <= 0) {
-            Logger.log('SubsCache - stopping: ' + this.hash);
+            console.log('SubsCache - stopping: ' + this.hash);
             this.sub.stop();
             return delete self.cache[this.hash];
           }
           else {
-            Logger.log('SubsCache - stopNow: ' + this.count + ' remaining computation(s) for ' + this.hash);
+            console.log('SubsCache - stopNow: ' + this.count + ' remaining computation(s) for ' + this.hash);
           }
         }
       };
@@ -187,7 +187,7 @@ SubsCache = function(expireAfter, cacheLimit) {
         if (numSubs >= this.cacheLimit) {
           var sortedSubs = _.sortBy(allSubs, function(x) { return x.startedAt });
           var needToDelete = (numSubs - this.cacheLimit) + 1;
-          Logger.log("SubsCache - overflow: Need to clear " + needToDelete + " subscription(s)");
+          console.log("SubsCache - overflow: Need to clear " + needToDelete + " subscription(s)");
           for (var i = 0; i < needToDelete; i++) {
             allSubs[i].count = 0;
             allSubs[i].stopNow();
