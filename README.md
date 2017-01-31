@@ -32,10 +32,11 @@ This will clean up and throw away the data you don't need. But what if the user 
 
 Initialize with optional `expireAfter` (default 5) and `cacheLimit` (default 10). `expireAfter` is the number of minutes after a subscription is stopped without having been restarted before truely stopping it. If set to -1, the subscription will never expire. `cacheLimit` is the max number of subscriptions to cache. Set to -1 for unlimited capacity.
 
-    subsCache = new SubsCache({
-      expireAter: 5,  // minutes
-      cacheLimit: 10
-    });
+```
+    subsCache = new SubsCache(5, 10);
+    // first argument is expireAter -- default is 5 minutes
+    // second argument is cacheLimit -- default is 10
+```
 
 - `subsCache.allReady()` tells you if all subscriptions in the cache are ready
 
