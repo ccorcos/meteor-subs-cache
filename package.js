@@ -17,7 +17,7 @@ Package.onUse(function(api) {
   ], ['client', 'server']);
 
   api.addFiles([
-    'src/subsCache.js',
+    'src/SubsCache.js',
   ], ['client','server']);
 
   api.export("SubsCache", ['client','server']);
