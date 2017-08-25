@@ -31,7 +31,7 @@ function callbacksFromArgs(args){
   }
 };
 
-SubsCache = function(expireAfter, cacheLimit) {
+SubsCache = function(expireAfter, cacheLimit, debug=false) {
   var self = this;
 
   this.debug = false;
