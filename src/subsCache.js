@@ -1,4 +1,6 @@
 import { EJSON } from 'meteor/ejson'
+import {ReactiveVar} from 'meteor/reactive-var';
+
 
 function hasCallbacks(args){
   // this logic is copied from Meteor.subscribe found in
@@ -32,6 +34,7 @@ function callbacksFromArgs(args){
 SubsCache = function(expireAfter, cacheLimit) {
   var self = this;
 
+  this.debug = false;
   this.expireAfter = expireAfter || 5;
   this.cacheLimit = cacheLimit || 10;
   this.cache = {};
@@ -57,7 +60,8 @@ SubsCache = function(expireAfter, cacheLimit) {
   }
 
   this.subscribe = function(...args) {
-    console.log('SubsCache - subscribe',args);
+    if (SubsCache.debug)
+      console.log('SubsCache - subscribe',args);
     args.unshift(this.expireAfter);
     return this.subscribeFor.apply(this, args);
   }
@@ -140,7 +144,7 @@ SubsCache = function(expireAfter, cacheLimit) {
           }
         },
         stop: function() {
-          console.log('SubsCache - stop: ' + this.hash);
+          if (SubsCache.debug) console.log('SubsCache - stop: ' + this.hash);
           if (this.expireTime >= 0) {
             this.timerId = setTimeout(this.stopNow.bind(this), this.expireTime*1000*60);
           }
@@ -156,12 +160,13 @@ SubsCache = function(expireAfter, cacheLimit) {
         stopNow: function() {
           this.count -= 1;
           if (this.count <= 0) {
-            console.log('SubsCache - stopping: ' + this.hash);
+            if (SubsCache.debug) console.log('SubsCache - stopping: ' + this.hash);
             this.sub.stop();
             return delete self.cache[this.hash];
           }
           else {
-            console.log('SubsCache - stopNow: ' + this.count + ' remaining computation(s) for ' + this.hash);
+            if (SubsCache.debug)
+              console.log('SubsCache - stopNow: ' + this.count + ' remaining computation(s) for ' + this.hash);
           }
         }
       };
@@ -187,7 +192,8 @@ SubsCache = function(expireAfter, cacheLimit) {
         if (numSubs >= this.cacheLimit) {
           var sortedSubs = _.sortBy(allSubs, function(x) { return x.startedAt });
           var needToDelete = (numSubs - this.cacheLimit) + 1;
-          console.log("SubsCache - overflow: Need to clear " + needToDelete + " subscription(s)");
+          if (SubsCache.debug)
+            console.log("SubsCache - overflow: Need to clear " + needToDelete + " subscription(s)");
           for (var i = 0; i < needToDelete; i++) {
             allSubs[i].count = 0;
             allSubs[i].stopNow();
