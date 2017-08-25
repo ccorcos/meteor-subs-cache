@@ -38,7 +38,7 @@ Initialize with optional `expireAfter` (default 5) and `cacheLimit` (default 10)
     // second argument is cacheLimit -- default is 10
 ```
 
-- `subsCache.allReady()` tells you if all subscriptions in the cache are ready
+- `subsCache.ready()` tells you if all subscriptions in the cache are ready
 
 - `sub = subsCache.subscribe(...)` creates a subscription just like `Meteor.subscribe`
 
