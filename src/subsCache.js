@@ -2,7 +2,7 @@ import { EJSON } from 'meteor/ejson'
 import {ReactiveVar} from 'meteor/reactive-var';
 
 
-function hasCallbacks(args){
+export const hasCallbacks = function(args){
   // this logic is copied from Meteor.subscribe found in
   // https://github.com/meteor/meteor/blob/master/packages/ddp/livedata_connection.js
   if (args.length) {
@@ -11,7 +11,7 @@ function hasCallbacks(args){
   }
 };
 
-function withoutCallbacks(args){
+export const withoutCallbacks = function(args){
   if (hasCallbacks(args)) {
     return args.slice(0,args.length-1);
   } else {
@@ -19,7 +19,7 @@ function withoutCallbacks(args){
   }
 };
 
-function callbacksFromArgs(args){
+export const callbacksFromArgs = function(args){
   if (hasCallbacks(args)) {
     if (_.isFunction(args[args.length-1])) {
       return {onReady: args[args.length-1]};
@@ -41,6 +41,15 @@ SubsCache = function(expireAfter, cacheLimit, debug=false) {
   this.allReady = new ReactiveVar(true);
 
   SubsCache.caches.push(this);
+
+  // required in order to make
+  // to make helpers accessible
+  // to unit tests
+  this.helpers = {
+	  hasCallbacks: hasCallbacks,
+	  withoutCallbacks: withoutCallbacks,
+	  callbacksFromArgs: callbacksFromArgs
+  }
 
   this.ready = function() {
     return this.allReady.get();
