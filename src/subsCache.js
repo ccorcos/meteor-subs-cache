@@ -8,7 +8,6 @@ function hasCallbacks(args){
     var lastArg = args[args.length-1];
     var isFct = _.isFunction(lastArg);
     var retValue = !!(lastArg && _.any([lastArg.onReady, lastArg.onError, lastArg.onStop], _.isFunction));
-    console.log(isFct, retValue);
     return  isFct || retValue;
   }else{
     return false;

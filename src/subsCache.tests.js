@@ -58,6 +58,49 @@ describe("SubsCache.helpers", function () {
 			assert.isFalse(hasCallbacks.call(null));
 		});
 	});
+
+	describe("withoutCallbacks", function () {
+
+		it ("returns an array without callbacks on an array with callbacks", function () {
+			var withoutCallbacks = SubsCache.helpers.withoutCallbacks;
+
+			var withoutCb1 = withoutCallbacks.call(null, [cb]);
+			assert.deepEqual(withoutCb1, []);
+
+			var withoutCb2 = withoutCallbacks.call(null, [1,2,3, cb]);
+			assert.deepEqual(withoutCb2, [1,2,3]);
+		});
+
+		it ("returns an empty array on empty or non existent input", function () {
+			var withoutCallbacks = SubsCache.helpers.withoutCallbacks;
+
+			assert.deepEqual(withoutCallbacks.call(null), []);
+			assert.deepEqual(withoutCallbacks.call(null, null), []);
+			assert.deepEqual(withoutCallbacks.call(null, undefined), []);
+		});
+	});
+
+
+	describe("callbacksFromArgs", function () {
+
+		it ("extracts callbacks from args if existent", function () {
+			var callbacksFromArgs = SubsCache.helpers.callbacksFromArgs;
+
+			assert.deepEqual(callbacksFromArgs.call(null, [null, cb]), {onReady: cb});
+		});
+
+		it ("returns an empty object of no callback is existent in args", function () {
+			var callbacksFromArgs = SubsCache.helpers.callbacksFromArgs;
+
+			assert.deepEqual(callbacksFromArgs.call(null), {});
+			assert.deepEqual(callbacksFromArgs.call(null, []), {});
+			assert.deepEqual(callbacksFromArgs.call(null, [1]), {});
+			assert.deepEqual(callbacksFromArgs.call(null, ["foo"]), {});
+			assert.deepEqual(callbacksFromArgs.call(null, [null]), {});
+			assert.deepEqual(callbacksFromArgs.call(null, null), {});
+			assert.deepEqual(callbacksFromArgs.call(null, undefined), {});
+		});
+	});
 })
 
 describe("SubsCache - instantiation", function () {
