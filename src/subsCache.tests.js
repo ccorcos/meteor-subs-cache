@@ -8,8 +8,9 @@ import {chai, assert} from 'meteor/practicalmeteor:chai';
 //==========================//
 
 var FakeCollection = new Mongo.Collection("tests");
-var publicationAllDocuments = "FakeCollection.publication.all"
-var publicationSomeDOcuments= "FakeCollection.publication.some"
+var publicationAllDocuments     = "FakeCollection.publication.all"
+var publicationSomeDOcuments    = "FakeCollection.publication.some"
+var methodAddDocument           = "FakeCollection.methods.add";
 
 if (Meteor.isServer) {
 	FakeCollection.remove({});
@@ -26,6 +27,12 @@ if (Meteor.isServer) {
 	Meteor.publish(publicationSomeDOcuments, function () {
 		return FakeCollection.find({value:1});
 	});
+
+	var methods = {};
+	methods[methodAddDocument] = function () {
+		FakeCollection.insert({value:0});
+	};
+	Meteor.methods(methods)
 }
 
 //==========================//
@@ -295,18 +302,40 @@ describe("SubsCache - ready", function () {
 
 describe("SubsCache - stop", function () {
 
-	it("will cache a subscription and stop after expireAfter unless restarted with sub.restart()", function () {
-		assert.fail("not yet implemented");
-		//sub.stop()
+	it("will cache a subscription and stop after expireAfter unless restarted with sub.restart()", function (done) {
+		var subsCache = new SubsCache();
+		var subAll = subsCache.subscribe(publicationAllDocuments);
+		subAll.onReady(function () {
+			subAll.stop();
+			assert.equal(Object.keys(subsCache.cache).length, 1);
+			assert.equal(FakeCollection.find().count(), 6);
+			done();
+		});
 	});
 
-	it("will stop a subscription immediately and remove it from the cache.", function () {
-		assert.fail("not yet implemented");
-		//sub.stopNow()
+	it("will stop a subscription immediately and remove it from the cache.", function (done) {
+		var subsCache = new SubsCache();
+		var subAll = subsCache.subscribe(publicationAllDocuments);
+		subAll.onReady(function () {
+			assert.equal(FakeCollection.find().count(), 6);
+			assert.isTrue(subAll.stopNow());
+			assert.equal(Object.keys(subsCache.cache).length, 0);
+			assert.isFalse(subAll.ready());
+			done();
+		});
 	});
 
-	it("will stop all subscription immediately", function () {
-		assert.fail("not yet implemented");
-		//subsCache.clear()
+	it("will stop all subscription immediately", function (done) {
+		var subsCache = new SubsCache();
+		var sub1 = subsCache.subscribe(publicationAllDocuments);
+		var sub2 = subsCache.subscribe(publicationSomeDOcuments);
+		assert.equal(Object.keys(subsCache.cache).length, 2);
+		subsCache.onReady(function () {
+			subsCache.clear();
+			assert.equal(Object.keys(subsCache.cache).length, 0);
+			assert.isFalse(sub1.ready());
+			assert.isFalse(sub2.ready());
+			done();
+		});
 	});
 });
