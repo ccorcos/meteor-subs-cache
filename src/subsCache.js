@@ -1,25 +1,29 @@
 import { EJSON } from 'meteor/ejson'
 import {ReactiveVar} from 'meteor/reactive-var';
 
-
-export const hasCallbacks = function(args){
+function hasCallbacks(args){
   // this logic is copied from Meteor.subscribe found in
   // https://github.com/meteor/meteor/blob/master/packages/ddp/livedata_connection.js
-  if (args.length) {
-    let lastArg = args[args.length-1];
-    return _.isFunction(lastArg) || (lastArg && _.any([lastArg.onReady, lastArg.onError, lastArg.onStop], _.isFunction));
+  if (args && args.length) {
+    var lastArg = args[args.length-1];
+    var isFct = _.isFunction(lastArg);
+    var retValue = !!(lastArg && _.any([lastArg.onReady, lastArg.onError, lastArg.onStop], _.isFunction));
+    console.log(isFct, retValue);
+    return  isFct || retValue;
+  }else{
+    return false;
   }
 };
 
-export const withoutCallbacks = function(args){
+function withoutCallbacks(args){
   if (hasCallbacks(args)) {
     return args.slice(0,args.length-1);
   } else {
-    return args.slice();
+    return args && args.length > 0 ? args.slice() : [];
   }
 };
 
-export const callbacksFromArgs = function(args){
+function callbacksFromArgs(args){
   if (hasCallbacks(args)) {
     if (_.isFunction(args[args.length-1])) {
       return {onReady: args[args.length-1]};
