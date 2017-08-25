@@ -2,14 +2,63 @@
 import {Meteor} from 'meteor/meteor';
 import {chai, assert} from 'meteor/practicalmeteor:chai';
 
-describe("SubsCache - Common", function () {
+var exists = function (value) {
+	assert.isDefined(value);
+	assert.isNotNull(value);
+};
+
+describe("SubsCache", function () {
 
 	it("is globally accessible", function () {
-		assert.isDefined(SubsCache);
-		assert.isNotNull(SubsCache);
+		exists(SubsCache);
 	});
 
+	it("has global 'helpers' accessible", function () {
+		exists(SubsCache.helpers);
+	});
+
+	it("has global 'caches' accessible", function () {
+		exists(SubsCache.caches);
+	});
+
+	it("has global 'clearAll' accessible", function () {
+		exists(SubsCache.clearAll);
+	});
+
+	it("has global 'computeHash' accessible", function () {
+		exists(SubsCache.computeHash);
+	});
 });
+
+describe("SubsCache.helpers", function () {
+
+	var cb = function (err, res) {};
+
+	describe("hasCallbacks", function () {
+
+		it("returns true, if last argument is a callback", function () {
+			var hasCallbacks = SubsCache.helpers.hasCallbacks;
+			assert.isTrue(hasCallbacks.call(null, [cb]));
+			assert.isTrue(hasCallbacks.call(null, [null, cb]));
+			assert.isTrue(hasCallbacks.call(null, [null, null, cb]));
+		});
+
+		it("returns false, if last argument is not a callback", function () {
+			var hasCallbacks = SubsCache.helpers.hasCallbacks;
+			assert.isFalse(hasCallbacks.call(null, [1]));
+			assert.isFalse(hasCallbacks.call(null, ["foo"]));
+			assert.isFalse(hasCallbacks.call(null, [{}]));
+			assert.isFalse(hasCallbacks.call(null, [undefined]));
+			assert.isFalse(hasCallbacks.call(null, [null]));
+		});
+
+		it("returns false if no arguments are given", function () {
+			var hasCallbacks = SubsCache.helpers.hasCallbacks;
+			assert.isFalse(hasCallbacks.call(null, []));
+			assert.isFalse(hasCallbacks.call(null));
+		});
+	});
+})
 
 describe("SubsCache - instantiation", function () {
 
