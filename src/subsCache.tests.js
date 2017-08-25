@@ -1,11 +1,45 @@
 /* eslint-env mocha */
 import {Meteor} from 'meteor/meteor';
+import {Mongo} from 'meteor/mongo';
 import {chai, assert} from 'meteor/practicalmeteor:chai';
+
+//==========================//
+// CREATE SOME PUBLICATIONS //
+//==========================//
+
+var FakeCollection = new Mongo.Collection("tests");
+var publicationAllDocuments = "FakeCollection.publication.all"
+var publicationSomeDOcuments= "FakeCollection.publication.some"
+
+if (Meteor.isServer) {
+	FakeCollection.remove({});
+	FakeCollection.insert({value:0});
+	FakeCollection.insert({value:0});
+	FakeCollection.insert({value:0});
+	FakeCollection.insert({value:1});
+	FakeCollection.insert({value:1});
+	FakeCollection.insert({value:1});
+	Meteor.publish(publicationAllDocuments, function () {
+		return FakeCollection.find();
+	});
+
+	Meteor.publish(publicationSomeDOcuments, function () {
+		return FakeCollection.find({value:1});
+	});
+}
+
+//==========================//
+// TEST HELPERS             //
+//==========================//
 
 var exists = function (value) {
 	assert.isDefined(value);
 	assert.isNotNull(value);
 };
+
+//==========================//
+// TESTS                    //
+//==========================//
 
 describe("SubsCache", function () {
 
@@ -105,58 +139,138 @@ describe("SubsCache.helpers", function () {
 
 describe("SubsCache - instantiation", function () {
 
+	it ("is instantiated as SubsCache instance", function () {
+		var subsCache = new SubsCache();
+		exists(subsCache);
+		assert.instanceOf(subsCache, SubsCache);
+	});
+
 	it("is instatiated with default settings", function () {
-		assert.fail("not yet implemented");
+		var subsCache = new SubsCache();
+		assert.equal(subsCache.cacheLimit, 10);
+		assert.equal(subsCache.expireAfter, 5);
+		assert.equal(subsCache.debug, false);
 	});
 
 	it("is instantiated with custom settings", function () {
-		assert.fail("not yet implemented");
+
+		var subsCache = new SubsCache(100,100,true);
+		assert.equal(subsCache.cacheLimit, 100);
+		assert.equal(subsCache.expireAfter, 100);
+		assert.equal(subsCache.debug, true);
 	});
 });
+
+if (!Meteor.isClient) return;
 
 describe("SubsCache - subscribe", function () {
 
 	it("creates a subscription just like Meteor.subscribe", function () {
-		assert.fail("not yet implemented");
-		//sub = subsCache.subscribe(...)
+		var subsCache = new SubsCache();
+		var sub = subsCache.subscribe(publicationAllDocuments);
+
+		assert.equal(sub.count, 1);
+		assert.equal(sub.expireTime, 5);
+		exists(sub.sub);
+
+		assert.equal(Object.keys(subsCache.cache).length, 1);
+	});
+
+	it ("has sub stored in instance's cache object", function () {
+		var subsCache = new SubsCache();
+		var sub = subsCache.subscribe(publicationAllDocuments);
+		var hash = SubsCache.computeHash(publicationAllDocuments);
+		assert.equal(sub.hash, hash);
+
+		var ref = subsCache.cache[hash];
+		assert.deepEqual(ref, sub);
 	});
 
 	it("allow you to set the expiration other than the defualt", function () {
-		assert.fail("not yet implemented");
-		//subsCache.subscribeFor(expireIn, ...)
+		var subsCache = new SubsCache();
+		var subAll = subsCache.subscribeFor(25,publicationAllDocuments);
+		assert.equal(subAll.expireTime, 25);
+		assert.notEqual(subAll.expireTime, subsCache.expireAfter);
 	});
 
-	it("allow you to set the expiration other than the defualt", function () {
-		assert.fail("not yet implemented");
-		//subsCache.subscribeFor(expireIn, ...)
+	it ("expires after given time", function (done) {
+		var subsCache = new SubsCache();
+		var subAll = subsCache.subscribeFor(0.000001,publicationAllDocuments);
+		subAll.stop();
+		setTimeout(function(){
+			assert.equal(Object.keys(subsCache.cache).length, 0);
+			done();
+		}, 1000);
 	});
+
+	it ("delete the oldest subscription if the cache has overflown", function () {
+		var subsCache = new SubsCache(5,1);
+		var subAll = subsCache.subscribe(publicationAllDocuments);
+		var subSome = subsCache.subscribe(publicationSomeDOcuments);
+		assert.equal(Object.keys(subsCache.cache).length, 1);
+
+		var hashAll = SubsCache.computeHash(publicationAllDocuments);
+		var hashSome = SubsCache.computeHash(publicationSomeDOcuments);
+
+		exists(subsCache.cache[hashSome]);
+		assert.isUndefined(subsCache.cache[hashAll]);
+	});
+
 });
+
+import { Tracker } from 'meteor/tracker'
 
 describe("SubsCache - ready", function () {
 
 	describe("individual", function () {
 
-		it("tells you if an individual subscription is ready", function () {
-			assert.fail("not yet implemented");
-			//sub.ready()
+		it("tells you if an individual subscription is ready", function (done) {
+			var subsCache = new SubsCache();
+			var subAll = subsCache.subscribe(publicationAllDocuments);
+			assert.isFalse(subAll.ready());
+			subAll.onReady(function () {
+				assert.equal(FakeCollection.find().count(), 6);
+				assert.isTrue(subAll.ready());
+				done();
+			})
+
 		});
 
-		it("will call a function once an individual subscription is ready", function () {
-			assert.fail("not yet implemented");
-			//sub.onReady(func)
+		it("will call a function once an individual subscription is ready", function (done) {
+			var subsCache = new SubsCache();
+			var subAll = subsCache.subscribe(publicationAllDocuments);
+			subAll.onReady(function () {
+				assert.equal(FakeCollection.find().count(), 6);
+				done();
+			})
 		});
 	})
 
 	describe("all", function () {
 
-		it("tells you if all subscriptions in the cache are ready", function () {
-			assert.fail("not yet implemented");
-			//subsCache.allReady()
+		it("tells you if all subscriptions in the cache are ready", function (done) {
+			var subsCache = new SubsCache();
+			var sub1 = subsCache.subscribe(publicationAllDocuments);
+			var sub2 = subsCache.subscribe(publicationSomeDOcuments);
+			assert.isFalse(subsCache.ready());
+			subsCache.onReady(function () {
+				assert.isTrue(subsCache.ready());
+				done();
+			})
 		});
 
-		it("will call a function once all subscription are ready", function () {
-			assert.fail("not yet implemented");
-			//subsCache.onReady(func)
+		it("will call a function once all subscription are ready", function (done) {
+			var subsCache = new SubsCache();
+			var sub1 = subsCache.subscribe(publicationAllDocuments);
+			var sub2 = subsCache.subscribe(publicationSomeDOcuments);
+			subsCache.onReady(function () {
+				assert.equal(FakeCollection.find().count(), 6);
+				assert.equal(Object.keys(subsCache.cache).length, 2);
+				assert.isTrue(sub1.ready());
+				assert.isTrue(sub2.ready());
+				done();
+			})
+
 		});
 
 	})
