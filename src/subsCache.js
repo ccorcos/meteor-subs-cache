@@ -37,7 +37,7 @@ function callbacksFromArgs(args){
 SubsCache = function(expireAfter, cacheLimit, debug=false) {
   var self = this;
 
-  this.debug = false;
+  this.debug = debug;
   this.expireAfter = expireAfter || 5;
   this.cacheLimit = cacheLimit || 10;
   this.cache = {};
