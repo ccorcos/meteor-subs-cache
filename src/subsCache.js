@@ -42,15 +42,6 @@ SubsCache = function(expireAfter, cacheLimit, debug=false) {
 
   SubsCache.caches.push(this);
 
-  // required in order to make
-  // to make helpers accessible
-  // to unit tests
-  this.helpers = {
-	  hasCallbacks: hasCallbacks,
-	  withoutCallbacks: withoutCallbacks,
-	  callbacksFromArgs: callbacksFromArgs
-  }
-
   this.ready = function() {
     return this.allReady.get();
   }
@@ -232,7 +223,17 @@ SubsCache = function(expireAfter, cacheLimit, debug=false) {
 SubsCache.caches = [];
 SubsCache.clearAll = function() {
   this.caches.map(function(s) { s.clear()});
-}
+};
+
 SubsCache.computeHash = function(...args) {
   return EJSON.stringify(withoutCallbacks(args));
+};
+
+// required in order to make
+// to make helpers accessible
+// to unit tests
+SubsCache.helpers = {
+	hasCallbacks: hasCallbacks,
+	withoutCallbacks: withoutCallbacks,
+	callbacksFromArgs: callbacksFromArgs
 }
