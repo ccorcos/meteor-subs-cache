@@ -20,6 +20,18 @@ Package.onUse(function(api) {
     'src/subsCache.js',
   ], ['client','server']);
 
-
   api.export("SubsCache", ['client','server']);
+});
+
+Package.onTest(function(api) {
+  api.use([
+    'underscore',
+    'ecmascript',
+    'ejson',
+    'tracker',
+    'reactive-var',
+    'ccorcos:subs-cache',
+    'practicalmeteor:chai'
+	], ['client', 'server']);
+  api.mainModule('src/subsCache.tests.js');
 });
