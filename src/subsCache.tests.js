@@ -37,6 +37,12 @@ var exists = function (value) {
 	assert.isNotNull(value);
 };
 
+var notExists = function(value) {
+	var isUndefined = typeof value === "undefined";
+	var isNull = value === null;
+	assert.isTrue(isUndefined || isNull);
+}
+
 //==========================//
 // TESTS                    //
 //==========================//
@@ -213,9 +219,18 @@ describe("SubsCache - subscribe", function () {
 		var hashSome = SubsCache.computeHash(publicationSomeDOcuments);
 
 		exists(subsCache.cache[hashSome]);
-		assert.isUndefined(subsCache.cache[hashAll]);
+		notExists(subsCache.cache[hashAll]);
 	});
 
+	it ("resets the time when restarted", function () {
+		var subsCache = new SubsCache();
+		var subAll = subsCache.subscribeFor(10,publicationAllDocuments);
+		notExists(subAll.timerId);
+		subAll.stop();
+		exists(subAll.timerId);
+		subAll.restart();
+		notExists(subAll.timerId);
+	})
 });
 
 import { Tracker } from 'meteor/tracker'

@@ -157,7 +157,10 @@ SubsCache = function(expireAfter, cacheLimit, debug=false) {
         },
         restart: function() {
           // if we'are restarting, then stop the current timer (previous ones still tick otherwise we would have inconsistencies)
-          if (this.timerId) clearTimeout(this.timerId);
+          if (this.timerId) {
+            clearTimeout(this.timerId);
+            this.timerId = null;
+          }
           return this.start();
         },
         stopNow: function() {
