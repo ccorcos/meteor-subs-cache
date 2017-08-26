@@ -1,7 +1,7 @@
 Package.describe({
   name: 'ccorcos:subs-cache',
   summary: 'A package for caching Meteor subscriptions.',
-  version: '0.9.0',
+  version: '0.9.1',
   git: 'https://github.com/ccorcos/meteor-subs-cache'
 });
 
@@ -11,6 +11,7 @@ Package.onUse(function(api) {
   api.use([
     'ecmascript',
     'underscore',
+    'ecmascript',
     'ejson',
     'tracker',
     'reactive-var'
@@ -21,4 +22,17 @@ Package.onUse(function(api) {
   ], ['client','server']);
 
   api.export("SubsCache", ['client','server']);
+});
+
+Package.onTest(function(api) {
+  api.use([
+    'underscore',
+    'ecmascript',
+    'ejson',
+    'tracker',
+    'reactive-var',
+    'ccorcos:subs-cache',
+    'practicalmeteor:chai'
+	], ['client', 'server']);
+  api.mainModule('src/subsCache.tests.js');
 });
