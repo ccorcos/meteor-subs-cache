@@ -9,6 +9,7 @@ Package.onUse(function(api) {
   api.versionsFrom('METEOR@1');
 
   api.use([
+    'ecmascript',
     'underscore',
     'ejson',
     'tracker',
@@ -16,9 +17,8 @@ Package.onUse(function(api) {
   ], ['client', 'server']);
 
   api.addFiles([
-    'src/subsCache.js',
+    'src/SubsCache.js',
   ], ['client','server']);
-
 
   api.export("SubsCache", ['client','server']);
 });
