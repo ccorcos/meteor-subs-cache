@@ -34,5 +34,5 @@ Package.onTest(function(api) {
     'ccorcos:subs-cache',
     'practicalmeteor:chai'
 	], ['client', 'server']);
-  api.mainModule('src/subsCache.tests.js');
+  api.mainModule('src/SubsCache.tests.js');
 });
