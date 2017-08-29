@@ -17,7 +17,7 @@ Package.onUse(function(api) {
   ], ['client', 'server']);
 
   api.addFiles([
-    'src/subsCache.js',
+    'src/SubsCache.js',
   ], ['client','server']);
 
   api.export("SubsCache", ['client','server']);
@@ -33,5 +33,5 @@ Package.onTest(function(api) {
     'ccorcos:subs-cache',
     'practicalmeteor:chai'
 	], ['client', 'server']);
-  api.mainModule('src/subsCache.tests.js');
+  api.mainModule('src/SubsCache.tests.js');
 });
