@@ -38,13 +38,13 @@ Initialize with optional `expireAfter` (default 5) and `cacheLimit` (default 10)
     // second argument is cacheLimit -- default is 10
 ```
 
-- `subsCache.ready()` tells you if all subscriptions in the cache are ready
-
 - `sub = subsCache.subscribe(...)` creates a subscription just like `Meteor.subscribe`
 
 - `sub = subsCache.subscribeFor(expireIn, ...)` allow you to set the expiration other than the defualt.
 
 - `subsCache.clear()` will stop all subscription immediately
+
+- `subsCache.ready()` tells you if all subscriptions in the cache are ready
 
 - `subsCache.onReady(func)` will call a function once all subscription are ready
 
@@ -55,3 +55,9 @@ Initialize with optional `expireAfter` (default 5) and `cacheLimit` (default 10)
 - `sub.ready()` tells you if an individual subscription is ready
 
 - `sub.onReady(func)` will call a function once an individual subscription is ready
+
+## Testing
+
+You can run the mocha-based tests in watch mode via:
+
+`meteor test-packages ./ --driver-package practicalmeteor:mocha`
