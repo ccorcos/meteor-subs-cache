@@ -148,6 +148,35 @@ describe("SubsCache.helpers", function () {
 			assert.deepEqual(callbacksFromArgs.call(null, undefined), {});
 		});
 	});
+
+	describe("argsChanged", function () {
+
+		it ("compares loosely", function () {
+			var argsChanged = SubsCache.helpers.argsChanged;
+
+			assert.isTrue(argsChanged([], [1]));
+			assert.isTrue(argsChanged([1], []));
+			assert.isTrue(argsChanged([1], [2]));
+			assert.isTrue(argsChanged([1], [1,2]));
+			assert.isTrue(argsChanged([1,3], [1,2]));
+			assert.isTrue(argsChanged(["1"], [1]));
+			assert.isTrue(argsChanged(["1"], ["1", "2"]));
+
+			assert.isFalse(argsChanged([],[]));
+			assert.isFalse(argsChanged([1],[1]));
+			assert.isFalse(argsChanged(["1"],["1"]));
+		});
+
+		it ("compares deep", function () {
+			var argsChanged = SubsCache.helpers.argsChanged;
+
+			assert.isTrue(argsChanged([{}], [{val:1}]));
+			assert.isTrue(argsChanged([{val:2}], [{val:1}]));
+
+			assert.isFalse(argsChanged([{val:1}], [{val:1}]));
+			assert.isFalse(argsChanged([{}], [{}]));
+		});
+	});
 })
 
 describe("SubsCache - instantiation", function () {
@@ -197,6 +226,22 @@ describe("SubsCache - subscribe", function () {
 
 		var ref = subsCache.cache[hash];
 		assert.deepEqual(ref, sub);
+	});
+
+	it ("allows to change parameters", function () {
+		var subsCache = new SubsCache();
+		var sub = subsCache.subscribe(publicationAllDocuments, {_id:"01234567"}, 10, {sort: {_id:1}});
+		var hash = SubsCache.computeHash(publicationAllDocuments);
+		assert.equal(sub.hash, hash);
+
+		var ref = subsCache.cache[hash];
+		assert.deepEqual(ref, sub);
+
+		var sub2 = subsCache.subscribe(publicationAllDocuments, {_id:"01234567"}, 15, {sort: {_id:1}});
+		ref = subsCache.cache[hash];
+		assert.deepEqual(ref, sub2);
+		assert.notDeepEqual(sub, sub2);
+		assert.notDeepEqual(sub.args, sub2.args);
 	});
 
 	it("allow you to set the expiration other than the defualt", function () {

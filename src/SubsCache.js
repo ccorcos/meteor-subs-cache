@@ -34,6 +34,20 @@ function callbacksFromArgs(args){
   }
 };
 
+function argsChanged(oldargs, newargs) {
+  //obvious case
+  if (oldargs.length !== newargs.length)
+    return true;
+
+  var cleanOldargs = withoutCallbacks(oldargs);
+  var cleanNewargs = withoutCallbacks(newargs);
+
+  var val1 = EJSON.stringify(cleanOldargs);
+  var val2 = EJSON.stringify(cleanNewargs);
+
+  return val1 !== val2;
+};
+
 SubsCache = function(expireAfter, cacheLimit, debug=false) {
   var self = this;
 
@@ -63,28 +77,32 @@ SubsCache = function(expireAfter, cacheLimit, debug=false) {
   }
 
   this.subscribe = function(...args) {
-    if (SubsCache.debug)
+    if (this.debug)
       console.log('SubsCache - subscribe',args);
+    if (!args || args.length === 0 || typeof args[0] !== 'string')
+      throw new Meteor.Error("500", "Invalid subscription call, first arg is expected to be a String.");
     args.unshift(this.expireAfter);
     return this.subscribeFor.apply(this, args);
   }
 
   this.subscribeFor = function(expireTime, ...args) {
-    var hash = EJSON.stringify(withoutCallbacks(args));
+    var hash = EJSON.stringify(args[0]);
 
-    if (hash in this.cache) {
+    if (hash in this.cache && !argsChanged(this.cache[hash].args, args)) {
       // if we find this subscription in the cache, then save the callbacks
       // and restart the cached subscription
       if (hasCallbacks(args)) {
         // TODO: remove duplicate callbacks -- in case of reactive subscriptions
         this.cache[hash].addHooks(callbacksFromArgs(args));
       }
+
       this.cache[hash].restart();
     }
     else {
       // create an object to represent this subscription in the cache
       var cachedSub = {
         sub: null,
+        args: null,
         hash,
         count: 0,
         timerId: null,
@@ -184,6 +202,11 @@ SubsCache = function(expireAfter, cacheLimit, debug=false) {
         onStop: cachedSub.makeCallHooksFn('onStop')
       });
 
+      // keep the current call's args
+      // to allow clients to compare
+      // their values
+      cachedSub.args = args;
+
       // make sure the subscription won't be stopped if we are in a reactive computation
       cachedSub.sub = Tracker.nonreactive(function() { return Meteor.subscribe.apply(Meteor, newArgs) });
 
@@ -232,7 +255,9 @@ SubsCache.clearAll = function() {
 };
 
 SubsCache.computeHash = function(...args) {
-  return EJSON.stringify(withoutCallbacks(args));
+  if (!args || args.length === 0 || typeof args[0] !== 'string')
+	  throw new Meteor.Error("500", "Invalid compute hash call, first is expected to be a String.")
+  return EJSON.stringify(withoutCallbacks(args[0]));
 };
 
 // required in order to make
@@ -241,5 +266,6 @@ SubsCache.computeHash = function(...args) {
 SubsCache.helpers = {
 	hasCallbacks: hasCallbacks,
 	withoutCallbacks: withoutCallbacks,
-	callbacksFromArgs: callbacksFromArgs
+	callbacksFromArgs: callbacksFromArgs,
+	argsChanged: argsChanged
 }
