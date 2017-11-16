@@ -31,7 +31,9 @@ Package.onTest(function(api) {
     'tracker',
     'reactive-var',
     'ccorcos:subs-cache',
-    'practicalmeteor:chai'
+    'practicalmeteor:chai',
+    'coffeescript@1.12.7_3',
+    'practicalmeteor:mocha@2.4.5_6'
 	], ['client', 'server']);
   api.mainModule('src/SubsCache.tests.js');
 });
