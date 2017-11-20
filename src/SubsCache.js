@@ -86,7 +86,7 @@ SubsCache = function(expireAfter, cacheLimit, debug=false) {
   }
 
   this.subscribeFor = function(expireTime, ...args) {
-    var hash = EJSON.stringify(args[0]);
+    var hash = EJSON.stringify(withoutCallbacks(args));
 
     if (hash in this.cache && !argsChanged(this.cache[hash].args, args)) {
       // if we find this subscription in the cache, then save the callbacks
@@ -257,7 +257,7 @@ SubsCache.clearAll = function() {
 SubsCache.computeHash = function(...args) {
   if (!args || args.length === 0 || typeof args[0] !== 'string')
 	  throw new Meteor.Error("500", "Invalid compute hash call, first is expected to be a String.")
-  return EJSON.stringify(withoutCallbacks(args[0]));
+  return EJSON.stringify(withoutCallbacks(args));
 };
 
 // required in order to make
