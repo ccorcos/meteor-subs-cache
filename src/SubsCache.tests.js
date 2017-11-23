@@ -228,23 +228,26 @@ describe("SubsCache - subscribe", function () {
 		assert.deepEqual(ref, sub);
 	});
 
-	it ("allows to change parameters", function () {
+	it ("allows multiple subscriptions with same name", function () {
 		var subsCache = new SubsCache();
 		var sub = subsCache.subscribe(publicationAllDocuments, {_id:"01234567"}, 10, {sort: {_id:1}});
-		var hash = SubsCache.computeHash(publicationAllDocuments);
+		var hash = SubsCache.computeHash(publicationAllDocuments, {_id:"01234567"}, 10, {sort: {_id:1}});
 		assert.equal(sub.hash, hash);
 
 		var ref = subsCache.cache[hash];
 		assert.deepEqual(ref, sub);
 
 		var sub2 = subsCache.subscribe(publicationAllDocuments, {_id:"01234567"}, 15, {sort: {_id:1}});
-		ref = subsCache.cache[hash];
+		var hash2 = SubsCache.computeHash(publicationAllDocuments, {_id:"01234567"}, 15, {sort: {_id:1}});
+
+		assert.notEqual(hash, hash2);
+		ref = subsCache.cache[hash2];
 		assert.deepEqual(ref, sub2);
 		assert.notDeepEqual(sub, sub2);
 		assert.notDeepEqual(sub.args, sub2.args);
 	});
 
-	it("allow you to set the expiration other than the defualt", function () {
+	it("allow you to set the expiration other than the default", function () {
 		var subsCache = new SubsCache();
 		var subAll = subsCache.subscribeFor(25,publicationAllDocuments);
 		assert.equal(subAll.expireTime, 25);
