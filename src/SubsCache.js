@@ -50,10 +50,11 @@ function argsChanged(oldargs, newargs) {
 
 SubsCache = function(expireAfter, cacheLimit, debug=false) {
   var self = this;
+  var optionsObj = typeof expireAfter == "object";
 
-  this.debug = debug;
-  this.expireAfter = expireAfter || 5;
-  this.cacheLimit = cacheLimit || 10;
+  this.debug = optionsObj ? expireAfter.debug : debug;
+  this.expireAfter = (optionsObj ? expireAfter.expireAfter : expireAfter) || 5;
+  this.cacheLimit = (optionsObj ? expireAfter.cacheLimit : cacheLimit) || 10;
   this.cache = {};
   this.allReady = new ReactiveVar(true);
 
@@ -87,6 +88,7 @@ SubsCache = function(expireAfter, cacheLimit, debug=false) {
 
   this.subscribeFor = function(expireTime, ...args) {
     var hash = EJSON.stringify(withoutCallbacks(args));
+    var self = this;
 
     if (hash in this.cache && !argsChanged(this.cache[hash].args, args)) {
       // if we find this subscription in the cache, then save the callbacks
@@ -165,12 +167,14 @@ SubsCache = function(expireAfter, cacheLimit, debug=false) {
           }
         },
         stop: function() {
-          if (SubsCache.debug) console.log('SubsCache - stop: ' + this.hash);
+          if (self.debug) console.log('SubsCache - stop: ' + this.hash);
           if (this.expireTime >= 0) {
             this.timerId = setTimeout(this.stopNow.bind(this), this.expireTime*1000*60);
           }
           else {
-            this.stopNow();
+            //inifinte expirations don't expire until the cache is full
+            //just update the counter
+            this.count -= 1;
           }
         },
         restart: function() {
@@ -184,12 +188,12 @@ SubsCache = function(expireAfter, cacheLimit, debug=false) {
         stopNow: function() {
           this.count -= 1;
           if (this.count <= 0) {
-            if (SubsCache.debug) console.log('SubsCache - stopping: ' + this.hash);
+            if (self.debug) console.log('SubsCache - stopping: ' + this.hash);
             this.sub.stop();
             return delete self.cache[this.hash];
           }
           else {
-            if (SubsCache.debug)
+            if (self.debug)
               console.log('SubsCache - stopNow: ' + this.count + ' remaining computation(s) for ' + this.hash);
           }
         }
@@ -214,19 +218,23 @@ SubsCache = function(expireAfter, cacheLimit, debug=false) {
         cachedSub.addHooks(callbacksFromArgs(args));
       }
 
-      // delete the oldest subscription if the cache has overflown
+      // delete the oldest subscription with count = 0 if the cache has overflown
       if (this.cacheLimit > 0) {
         var allSubs = _.values(this.cache);
         var numSubs = allSubs.length;
         if (numSubs >= this.cacheLimit) {
           var sortedSubs = _.sortBy(allSubs, function(x) { return x.startedAt });
           var needToDelete = (numSubs - this.cacheLimit) + 1;
-          if (SubsCache.debug)
+          if (self.debug)
             console.log("SubsCache - overflow: Need to clear " + needToDelete + " subscription(s)");
-          for (var i = 0; i < needToDelete; i++) {
-            allSubs[i].count = 0;
-            allSubs[i].stopNow();
+          for (var i = 0; needToDelete && i < sortedSubs.length ; i++) {
+            if (sortedSubs[i].count == 0) {
+                sortedSubs[i].stopNow();
+                needToDelete--;
+            }
           }
+          if (self.debug && needToDelete)
+              console.log("SubsCache - overflow: Still need to clear " + needToDelete + " subscription(s), but all are still active.");
         }
       }
 
