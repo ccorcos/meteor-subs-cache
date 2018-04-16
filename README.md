@@ -61,3 +61,9 @@ Initialize with optional `expireAfter` (default 5) and `cacheLimit` (default 10)
 You can run the mocha-based tests in watch mode via:
 
 `meteor test-packages ./ --driver-package practicalmeteor:mocha`
+
+## Known Issues
+
+### No data is injected when using with Fast Render
+
+When using the Fast Render package the parameters passed to the subscription must the identical on both Fast Render and Subscache or no data will be injected.
