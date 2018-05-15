@@ -4,7 +4,7 @@
   "description": "A package for caching Meteor subscriptions",
   "scripts": {
     "test": "meteor test-packages ./ --driver-package cultofcoders:mocha",
-    "precommit": "lint-staged"
+    "precommit": "pretty-quick --staged"
   },
   "repository": {
     "type": "git",
@@ -15,13 +15,12 @@
   },
   "homepage": "https://github.com/ccorcos/meteor-subs-cache#readme",
   "devDependencies": {
+    "husky": "^0.14.3",
     "lint-staged": "^7.1.0",
-    "prettier": "^1.12.1"
+    "prettier": "^1.12.1",
+    "pretty-quick": "^1.4.1"
   },
   "lint-staged": {
-    "*.{js,json,css,md}": [
-      "prettier --write",
-      "git add"
-    ]
+    "*.{js,json,css,md}": ["prettier --write", "git add"]
   }
 }
