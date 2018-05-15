@@ -60,7 +60,7 @@ Initialize with optional `expireAfter` (default 5) and `cacheLimit` (default 10)
 
 You can run the mocha-based tests in watch mode via:
 
-`meteor test-packages ./ --driver-package practicalmeteor:mocha`
+`meteor test-packages ./ --driver-package cultofcoders:mocha`
 
 ## Known Issues
 

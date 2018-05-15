@@ -2,6 +2,7 @@
 import {Meteor} from 'meteor/meteor';
 import {Mongo} from 'meteor/mongo';
 import {chai, assert} from 'meteor/practicalmeteor:chai';
+import {describe, it} from 'meteor/cultofcoders:mocha';
 
 //==========================//
 // CREATE SOME PUBLICATIONS //
