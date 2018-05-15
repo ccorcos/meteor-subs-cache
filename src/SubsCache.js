@@ -1,43 +1,45 @@
-import { EJSON } from 'meteor/ejson'
-import {ReactiveVar} from 'meteor/reactive-var';
+import { EJSON } from "meteor/ejson";
+import { ReactiveVar } from "meteor/reactive-var";
 
-function hasCallbacks(args){
+function hasCallbacks(args) {
   // this logic is copied from Meteor.subscribe found in
   // https://github.com/meteor/meteor/blob/master/packages/ddp/livedata_connection.js
   if (args && args.length) {
-    var lastArg = args[args.length-1];
+    var lastArg = args[args.length - 1];
     var isFct = _.isFunction(lastArg);
-    var retValue = !!(lastArg && _.any([lastArg.onReady, lastArg.onError, lastArg.onStop], _.isFunction));
-    return  isFct || retValue;
-  }else{
+    var retValue = !!(
+      lastArg &&
+      _.any([lastArg.onReady, lastArg.onError, lastArg.onStop], _.isFunction)
+    );
+    return isFct || retValue;
+  } else {
     return false;
   }
-};
+}
 
-function withoutCallbacks(args){
+function withoutCallbacks(args) {
   if (hasCallbacks(args)) {
-    return args.slice(0,args.length-1);
+    return args.slice(0, args.length - 1);
   } else {
     return args && args.length > 0 ? args.slice() : [];
   }
-};
+}
 
-function callbacksFromArgs(args){
+function callbacksFromArgs(args) {
   if (hasCallbacks(args)) {
-    if (_.isFunction(args[args.length-1])) {
-      return {onReady: args[args.length-1]};
+    if (_.isFunction(args[args.length - 1])) {
+      return { onReady: args[args.length - 1] };
     } else {
-      return args[args.length-1];
+      return args[args.length - 1];
     }
   } else {
     return {};
   }
-};
+}
 
 function argsChanged(oldargs, newargs) {
   //obvious case
-  if (oldargs.length !== newargs.length)
-    return true;
+  if (oldargs.length !== newargs.length) return true;
 
   var cleanOldargs = withoutCallbacks(oldargs);
   var cleanNewargs = withoutCallbacks(newargs);
@@ -46,9 +48,9 @@ function argsChanged(oldargs, newargs) {
   var val2 = EJSON.stringify(cleanNewargs);
 
   return val1 !== val2;
-};
+}
 
-SubsCache = function(expireAfter, cacheLimit, debug=false) {
+SubsCache = function(expireAfter, cacheLimit, debug = false) {
   var self = this;
   var optionsObj = typeof expireAfter == "object";
 
@@ -62,7 +64,7 @@ SubsCache = function(expireAfter, cacheLimit, debug=false) {
 
   this.ready = function() {
     return this.allReady.get();
-  }
+  };
 
   this.onReady = function(callback) {
     Tracker.autorun(function(c) {
@@ -71,25 +73,29 @@ SubsCache = function(expireAfter, cacheLimit, debug=false) {
         return callback();
       }
     });
-  }
+  };
 
   this.clear = function() {
-    return _.values(this.cache).map(function(sub) { sub.stopNow() });
-  }
+    return _.values(this.cache).map(function(sub) {
+      sub.stopNow();
+    });
+  };
 
   this.subscribe = function(...args) {
-    if (this.debug)
-      console.log('SubsCache - subscribe',args);
-    if (!args || args.length === 0 || typeof args[0] !== 'string')
-      throw new Meteor.Error("500", "Invalid subscription call, first arg is expected to be a String.");
+    if (this.debug) console.log("SubsCache - subscribe", args);
+    if (!args || args.length === 0 || typeof args[0] !== "string")
+      throw new Meteor.Error(
+        "500",
+        "Invalid subscription call, first arg is expected to be a String."
+      );
     args.unshift(this.expireAfter);
     return this.subscribeFor.apply(this, args);
-  }
+  };
 
   this.subscribeFor = function(expireTime, ...args) {
     if (Meteor.isServer) {
-		// If we're using fast-render for SSR
-    	Meteor.subscribe.apply(Meteor.args)
+      // If we're using fast-render for SSR
+      Meteor.subscribe.apply(Meteor.args);
     } else {
       var hash = EJSON.stringify(withoutCallbacks(args));
       var self = this;
@@ -103,8 +109,7 @@ SubsCache = function(expireAfter, cacheLimit, debug=false) {
         }
 
         this.cache[hash].restart();
-      }
-      else {
+      } else {
         // create an object to represent this subscription in the cache
         var cachedSub = {
           sub: null,
@@ -120,18 +125,22 @@ SubsCache = function(expireAfter, cacheLimit, debug=false) {
           },
           onReady: function(callback) {
             if (this.sub.ready()) {
-              return Tracker.nonreactive(function() { callback() });
+              return Tracker.nonreactive(function() {
+                callback();
+              });
             } else {
               var cachedSub = this;
               return Tracker.autorun(function(c) {
                 if (cachedSub.sub.ready()) {
                   c.stop();
-                  return Tracker.nonreactive(function() { callback() });
+                  return Tracker.nonreactive(function() {
+                    callback();
+                  });
                 }
               });
             }
           },
-          addHooks: function(callbacks){
+          addHooks: function(callbacks) {
             // @onReady has the correct behaviour for new onReady callbacks, the
             // rest are stored for calling later
             if (_.isFunction(callbacks.onReady)) {
@@ -140,7 +149,7 @@ SubsCache = function(expireAfter, cacheLimit, debug=false) {
             }
             return this.hooks.push(callbacks);
           },
-          makeCallHooksFn: function(hookName){
+          makeCallHooksFn: function(hookName) {
             // returns a function that passes its this argument and arguments list
             // to each of the hooks with the given name
             cachedSub = this;
@@ -171,36 +180,42 @@ SubsCache = function(expireAfter, cacheLimit, debug=false) {
             }
           },
           stop: function() {
-            if (self.debug) console.log('SubsCache - stop: ' + this.hash);
+            if (self.debug) console.log("SubsCache - stop: " + this.hash);
             if (this.expireTime >= 0) {
-              this.timerId = setTimeout(this.stopNow.bind(this), this.expireTime*1000*60);
-            }
-            else {
+              this.timerId = setTimeout(
+                this.stopNow.bind(this),
+                this.expireTime * 1000 * 60
+              );
+            } else {
               //inifinte expirations don't expire until the cache is full
               //just update the counter
               this.count -= 1;
             }
           },
           restart: function() {
-            if (self.debug) console.log('SubsCache - restart: ' + this.hash);
+            if (self.debug) console.log("SubsCache - restart: " + this.hash);
             // if we'are restarting, then stop the current timer (previous ones still tick otherwise we would have inconsistencies)
             if (this.timerId) {
               clearTimeout(this.timerId);
               this.timerId = null;
-            }	  
+            }
             this.count -= 1;
             return this.start();
           },
           stopNow: function() {
             this.count -= 1;
             if (this.count <= 0) {
-              if (self.debug) console.log('SubsCache - stopping: ' + this.hash);
+              if (self.debug) console.log("SubsCache - stopping: " + this.hash);
               this.sub.stop();
               return delete self.cache[this.hash];
-            }
-            else {
+            } else {
               if (self.debug)
-                console.log('SubsCache - stopNow: ' + this.count + ' remaining computation(s) for ' + this.hash);
+                console.log(
+                  "SubsCache - stopNow: " +
+                    this.count +
+                    " remaining computation(s) for " +
+                    this.hash
+                );
             }
           }
         };
@@ -208,8 +223,8 @@ SubsCache = function(expireAfter, cacheLimit, debug=false) {
         // create the subscription, giving it callbacks that call our stored hooks
         var newArgs = withoutCallbacks(args);
         newArgs.push({
-          onError: cachedSub.makeCallHooksFn('onError'),
-          onStop: cachedSub.makeCallHooksFn('onStop')
+          onError: cachedSub.makeCallHooksFn("onError"),
+          onStop: cachedSub.makeCallHooksFn("onStop")
         });
 
         // keep the current call's args
@@ -218,7 +233,9 @@ SubsCache = function(expireAfter, cacheLimit, debug=false) {
         cachedSub.args = args;
 
         // make sure the subscription won't be stopped if we are in a reactive computation
-        cachedSub.sub = Tracker.nonreactive(function() { return Meteor.subscribe.apply(Meteor, newArgs) });
+        cachedSub.sub = Tracker.nonreactive(function() {
+          return Meteor.subscribe.apply(Meteor, newArgs);
+        });
 
         if (hasCallbacks(args)) {
           cachedSub.addHooks(callbacksFromArgs(args));
@@ -229,18 +246,28 @@ SubsCache = function(expireAfter, cacheLimit, debug=false) {
           var allSubs = _.values(this.cache);
           var numSubs = allSubs.length;
           if (numSubs >= this.cacheLimit) {
-            var sortedSubs = _.sortBy(allSubs, function(x) { return x.startedAt });
-            var needToDelete = (numSubs - this.cacheLimit) + 1;
+            var sortedSubs = _.sortBy(allSubs, function(x) {
+              return x.startedAt;
+            });
+            var needToDelete = numSubs - this.cacheLimit + 1;
             if (self.debug)
-              console.log("SubsCache - overflow: Need to clear " + needToDelete + " subscription(s)");
-            for (var i = 0; needToDelete && i < sortedSubs.length ; i++) {
+              console.log(
+                "SubsCache - overflow: Need to clear " +
+                  needToDelete +
+                  " subscription(s)"
+              );
+            for (var i = 0; needToDelete && i < sortedSubs.length; i++) {
               if (sortedSubs[i].count == 0) {
-                  sortedSubs[i].stopNow();
-                  needToDelete--;
+                sortedSubs[i].stopNow();
+                needToDelete--;
               }
             }
             if (self.debug && needToDelete)
-                console.log("SubsCache - overflow: Still need to clear " + needToDelete + " subscription(s), but all are still active.");
+              console.log(
+                "SubsCache - overflow: Still need to clear " +
+                  needToDelete +
+                  " subscription(s), but all are still active."
+              );
           }
         }
 
@@ -253,24 +280,37 @@ SubsCache = function(expireAfter, cacheLimit, debug=false) {
           self.allReadyComp = c;
           let subs = _.values(self.cache);
           if (subs.length > 0) {
-            return self.allReady.set(subs.map(function(x) { return x.ready()}).reduce(function(a,b) {return a && b}));
+            return self.allReady.set(
+              subs
+                .map(function(x) {
+                  return x.ready();
+                })
+                .reduce(function(a, b) {
+                  return a && b;
+                })
+            );
           }
         });
       }
 
       return this.cache[hash];
     } // end of this.subscribeFor
-  }
-}
+  };
+};
 
 SubsCache.caches = [];
 SubsCache.clearAll = function() {
-  this.caches.map(function(s) { s.clear()});
+  this.caches.map(function(s) {
+    s.clear();
+  });
 };
 
 SubsCache.computeHash = function(...args) {
-  if (!args || args.length === 0 || typeof args[0] !== 'string')
-	  throw new Meteor.Error("500", "Invalid compute hash call, first is expected to be a String.")
+  if (!args || args.length === 0 || typeof args[0] !== "string")
+    throw new Meteor.Error(
+      "500",
+      "Invalid compute hash call, first is expected to be a String."
+    );
   return EJSON.stringify(withoutCallbacks(args));
 };
 
@@ -278,8 +318,8 @@ SubsCache.computeHash = function(...args) {
 // to make helpers accessible
 // to unit tests
 SubsCache.helpers = {
-	hasCallbacks: hasCallbacks,
-	withoutCallbacks: withoutCallbacks,
-	callbacksFromArgs: callbacksFromArgs,
-	argsChanged: argsChanged
-}
+  hasCallbacks: hasCallbacks,
+  withoutCallbacks: withoutCallbacks,
+  callbacksFromArgs: callbacksFromArgs,
+  argsChanged: argsChanged
+};
