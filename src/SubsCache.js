@@ -187,8 +187,8 @@ SubsCache = function(expireAfter, cacheLimit, debug=false) {
             if (this.timerId) {
               clearTimeout(this.timerId);
               this.timerId = null;
-              this.count -= 1;
-            }
+            }	  
+            this.count -= 1;
             return this.start();
           },
           stopNow: function() {
