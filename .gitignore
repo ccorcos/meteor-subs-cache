@@ -1,2 +1,9 @@
 *.DS_Store
 .versions
+
+# Dependency directories
+node_modules/
+jspm_packages/
+
+# editor artifacts
+.idea/

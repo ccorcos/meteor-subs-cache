@@ -1,0 +1,27 @@
+{
+  "name": "subs-cache",
+  "version": "0.9.6",
+  "description": "A package for caching Meteor subscriptions",
+  "scripts": {
+    "test": "meteor test-packages ./ --driver-package cultofcoders:mocha",
+    "precommit": "lint-staged"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ccorcos/meteor-subs-cache.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ccorcos/meteor-subs-cache/issues"
+  },
+  "homepage": "https://github.com/ccorcos/meteor-subs-cache#readme",
+  "devDependencies": {
+    "lint-staged": "^7.1.0",
+    "prettier": "^1.12.1"
+  },
+  "lint-staged": {
+    "*.{js,json,css,md}": [
+      "prettier --write",
+      "git add"
+    ]
+  }
+}
