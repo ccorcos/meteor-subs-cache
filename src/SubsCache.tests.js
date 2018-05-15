@@ -279,15 +279,17 @@ describe("SubsCache - subscribe", function() {
 
   it("delete the oldest subscription if the cache has overflown", function() {
     var subsCache = new SubsCache(5, 1);
-    var subAll = subsCache.subscribe(publicationAllDocuments);
+    var subAll = subsCache.subscribeFor(0.000001, publicationAllDocuments);
     var subSome = subsCache.subscribe(publicationSomeDOcuments);
-    assert.equal(Object.keys(subsCache.cache).length, 1);
+    setTimeout(function() {
+      assert.equal(Object.keys(subsCache.cache).length, 1);
+      var hashAll = SubsCache.computeHash(publicationAllDocuments);
+      var hashSome = SubsCache.computeHash(publicationSomeDOcuments);
 
-    var hashAll = SubsCache.computeHash(publicationAllDocuments);
-    var hashSome = SubsCache.computeHash(publicationSomeDOcuments);
-
-    exists(subsCache.cache[hashSome]);
-    notExists(subsCache.cache[hashAll]);
+      exists(subsCache.cache[hashSome]);
+      notExists(subsCache.cache[hashAll]);
+      done();
+    }, 1000);
   });
 
   it("resets the time when restarted", function() {
