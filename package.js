@@ -9,7 +9,7 @@ Package.onUse(function(api) {
   api.versionsFrom("METEOR@1.6.1");
 
   api.use(
-    ["ecmascript@0.8.3", "underscore", "ejson", "tracker", "reactive-var"],
+    ["ecmascript@0.8.3", "ejson", "tracker", "reactive-var"],
     ["client", "server"]
   );
 
@@ -21,7 +21,6 @@ Package.onUse(function(api) {
 Package.onTest(function(api) {
   api.use(
     [
-      "underscore",
       "ecmascript",
       "ejson",
       "tracker",
