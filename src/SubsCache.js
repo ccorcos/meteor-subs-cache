@@ -6,10 +6,12 @@ function hasCallbacks(args) {
   // https://github.com/meteor/meteor/blob/master/packages/ddp/livedata_connection.js
   if (args && args.length) {
     var lastArg = args[args.length - 1];
-    var isFct = _.isFunction(lastArg);
+    var isFct = typeof lastArg === "function";
     var retValue = !!(
       lastArg &&
-      _.any([lastArg.onReady, lastArg.onError, lastArg.onStop], _.isFunction)
+      [lastArg.onReady, lastArg.onError, lastArg.onStop].some(
+        f => typeof f === "function"
+      )
     );
     return isFct || retValue;
   } else {
@@ -27,7 +29,7 @@ function withoutCallbacks(args) {
 
 function callbacksFromArgs(args) {
   if (hasCallbacks(args)) {
-    if (_.isFunction(args[args.length - 1])) {
+    if (typeof args[args.length - 1] === "function") {
       return { onReady: args[args.length - 1] };
     } else {
       return args[args.length - 1];
@@ -76,7 +78,7 @@ SubsCache = function(expireAfter, cacheLimit, debug = false) {
   };
 
   this.clear = function() {
-    return _.values(this.cache).map(function(sub) {
+    return Object.values(this.cache).map(function(sub) {
       sub.stopNow();
     });
   };
@@ -143,7 +145,7 @@ SubsCache = function(expireAfter, cacheLimit, debug = false) {
           addHooks: function(callbacks) {
             // @onReady has the correct behaviour for new onReady callbacks, the
             // rest are stored for calling later
-            if (_.isFunction(callbacks.onReady)) {
+            if (typeof callbacks.onReady === "function") {
               this.onReady(callbacks.onReady);
               delete callbacks.onReady;
             }
@@ -156,8 +158,8 @@ SubsCache = function(expireAfter, cacheLimit, debug = false) {
             return function() {
               let originalThis = this;
               let originalArgs = arguments;
-              return _.each(cachedSub.hooks, function(hookDict) {
-                if (_.isFunction(hookDict[hookName])) {
+              return cachedSub.hooks.forEach(function(hookDict) {
+                if (typeof hookDict[hookName] === "function") {
                   return hookDict[hookName].apply(originalThis, originalArgs);
                 }
               });
@@ -243,11 +245,11 @@ SubsCache = function(expireAfter, cacheLimit, debug = false) {
 
         // delete the oldest subscription with count = 0 if the cache has overflown
         if (this.cacheLimit > 0) {
-          var allSubs = _.values(this.cache);
+          var allSubs = Object.values(this.cache);
           var numSubs = allSubs.length;
           if (numSubs >= this.cacheLimit) {
-            var sortedSubs = _.sortBy(allSubs, function(x) {
-              return x.startedAt;
+            var sortedSubs = allSubs.sort(function(a, b) {
+              return a.startedAt - b.startedAt;
             });
             var needToDelete = numSubs - this.cacheLimit + 1;
             if (self.debug)
@@ -278,7 +280,7 @@ SubsCache = function(expireAfter, cacheLimit, debug = false) {
         if (this.allReadyComp != null) this.allReadyComp.stop();
         Tracker.autorun(function(c) {
           self.allReadyComp = c;
-          let subs = _.values(self.cache);
+          let subs = Object.values(self.cache);
           if (subs.length > 0) {
             return self.allReady.set(
               subs

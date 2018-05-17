@@ -3,7 +3,10 @@
   "version": "0.9.6",
   "description": "A package for caching Meteor subscriptions",
   "scripts": {
-    "test": "meteor test-packages ./ --driver-package cultofcoders:mocha",
+    "test":
+      "meteor test-packages ./ --once --driver-package meteortesting:mocha",
+    "test-watch":
+      "meteor test-packages ./ --driver-package meteortesting:mocha",
     "precommit": "pretty-quick --staged"
   },
   "repository": {
@@ -16,7 +19,6 @@
   "homepage": "https://github.com/ccorcos/meteor-subs-cache#readme",
   "devDependencies": {
     "husky": "^0.14.3",
-    "lint-staged": "^7.1.0",
     "prettier": "^1.12.1",
     "pretty-quick": "^1.4.1"
   },
