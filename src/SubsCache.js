@@ -97,7 +97,7 @@ SubsCache = function(expireAfter, cacheLimit, debug = false) {
   this.subscribeFor = function(expireTime, ...args) {
     if (Meteor.isServer) {
       // If we're using fast-render for SSR
-      Meteor.subscribe.apply(Meteor.args);
+      return Meteor.subscribe.apply(args);
     } else {
       var hash = EJSON.stringify(withoutCallbacks(args));
       var self = this;
