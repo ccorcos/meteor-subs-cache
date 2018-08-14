@@ -79,6 +79,10 @@ SubsCache = function(expireAfter, cacheLimit, debug = false) {
 
   this.clear = function() {
     return Object.values(this.cache).map(function(sub) {
+      if (sub.timerId) {
+        clearInterval(sub.timerId);
+        sub.timerId = null;
+      }
       sub.stopNow();
     });
   };
