@@ -392,4 +392,37 @@ describe("SubsCache - stop", function() {
       done();
     });
   });
+
+
+});
+
+
+describe("SubsCache - expiration", function() {
+
+  it ("sets starts ab interval for expiration, if stopped", function(done) {
+    var subsCache = new SubsCache(1000000);
+    var sub1 = subsCache.subscribe(publicationAllDocuments);
+
+    subsCache.onReady(function() {
+      assert.isNull(sub1.timerId);
+      sub1.stop();
+      assert.isNotNull(sub1.timerId);
+      done();
+    });
+  });
+
+  it("clears the interval on clear", function(done) {
+    var subsCache = new SubsCache(1000000);
+    var sub1 = subsCache.subscribe(publicationAllDocuments);
+
+    subsCache.onReady(function() {
+      assert.isNull(sub1.timerId);
+      sub1.stop();
+      assert.isNotNull(sub1.timerId);
+      subsCache.clear();
+      assert.isNull(sub1.timerId);
+      done();
+    });
+  });
+
 });
