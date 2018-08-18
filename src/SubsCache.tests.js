@@ -10,7 +10,8 @@ import { describe, it } from "meteor/cultofcoders:mocha";
 
 var FakeCollection = new Mongo.Collection("tests");
 var publicationAllDocuments = "FakeCollection.publication.all";
-var publicationSomeDOcuments = "FakeCollection.publication.some";
+var publicationOneDocuments = "FakeCollection.publication.some";
+var publicationSomeDOcuments = "FakeCollection.publication.one";
 var methodAddDocument = "FakeCollection.methods.add";
 
 if (Meteor.isServer) {
@@ -21,6 +22,7 @@ if (Meteor.isServer) {
   FakeCollection.insert({ value: 1 });
   FakeCollection.insert({ value: 1 });
   FakeCollection.insert({ value: 1 });
+
   Meteor.publish(publicationAllDocuments, function() {
     return FakeCollection.find();
   });
@@ -28,6 +30,11 @@ if (Meteor.isServer) {
   Meteor.publish(publicationSomeDOcuments, function() {
     return FakeCollection.find({ value: 1 });
   });
+
+  Meteor.publish(publicationOneDocuments, function() {
+    return FakeCollection.find({}, {limit: 1});
+  });
+
 
   var methods = {};
   methods[methodAddDocument] = function() {
@@ -433,10 +440,12 @@ describe("Subscache - cache limit", function() {
     var subsCache = new SubsCache(100, 1);
     var sub1 = subsCache.subscribe(publicationAllDocuments);
     var sub2 = subsCache.subscribe(publicationSomeDOcuments);
+    var sub3 = subsCache.subscribe(publicationOneDocuments);
 
     subsCache.onReady(function() {
       assert.isFalse(sub1.ready());
-      assert.isTrue(sub2.ready());
+      assert.isFalse(sub2.ready());
+      assert.isTrue(sub3.ready());
       done();
     });
   });
@@ -445,6 +454,7 @@ describe("Subscache - cache limit", function() {
     var subsCache = new SubsCache(100, 1);
     var sub1 = subsCache.subscribe(publicationAllDocuments);
     var sub2 = subsCache.subscribe(publicationSomeDOcuments);
+    var sub3 = subsCache.subscribe(publicationOneDocuments);
 
     assert.equal(Object.keys(subsCache.cache).length, 1);
     subsCache.onReady(function() {
