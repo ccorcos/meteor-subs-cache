@@ -79,10 +79,7 @@ SubsCache = function(expireAfter, cacheLimit, debug = false) {
 
   this.clear = function() {
     return Object.values(this.cache).map(function(sub) {
-      if (sub.timerId) {
-        clearInterval(sub.timerId);
-        sub.timerId = null;
-      }
+      sub.clear();
       sub.stopNow();
     });
   };
@@ -223,6 +220,13 @@ SubsCache = function(expireAfter, cacheLimit, debug = false) {
                     this.hash
                 );
             }
+          },
+          clear() {
+            // clear timer if exists
+            if (this.timerId) {
+              clearInterval(this.timerId);
+              this.timerId = null;
+            }
           }
         };
 
@@ -247,7 +251,7 @@ SubsCache = function(expireAfter, cacheLimit, debug = false) {
           cachedSub.addHooks(callbacksFromArgs(args));
         }
 
-        // delete the oldest subscription with count = 0 if the cache has overflown
+        // delete the oldest subscription
         if (this.cacheLimit > 0) {
           var allSubs = Object.values(this.cache);
           var numSubs = allSubs.length;
@@ -263,10 +267,10 @@ SubsCache = function(expireAfter, cacheLimit, debug = false) {
                   " subscription(s)"
               );
             for (var i = 0; needToDelete && i < sortedSubs.length; i++) {
-              if (sortedSubs[i].count == 0) {
-                sortedSubs[i].stopNow();
-                needToDelete--;
-              }
+              var currentSub = sortedSubs[i];
+              currentSub.clear();
+              currentSub.stopNow();
+              needToDelete--;
             }
             if (self.debug && needToDelete)
               console.log(
