@@ -429,24 +429,42 @@ describe("SubsCache - expiration", function() {
 
 describe("Subscache - cache limit", function() {
 
-  it("stops and removes the oldest subscription with count = 0 if the cache has overflown", function(done) {
+  it("stops the oldest subscription if the cache has overflown", function(done) {
     var subsCache = new SubsCache(100, 1);
     var sub1 = subsCache.subscribe(publicationAllDocuments);
-    assert.equal(Object.keys(subsCache.cache).length, 1);
+    var sub2 = subsCache.subscribe(publicationSomeDOcuments);
+
     subsCache.onReady(function() {
-
-      var sub2 = subsCache.subscribe(publicationSomeDOcuments);
-      assert.equal(Object.keys(subsCache.cache).length, 1);
-
       assert.isFalse(sub1.ready());
-      assert.isNull(sub1.timerId);
-      
       assert.isTrue(sub2.ready());
       done();
     });
   });
 
+  it("removes the oldest subscription if the cache has overflown", function(done) {
+    var subsCache = new SubsCache(100, 1);
+    var sub1 = subsCache.subscribe(publicationAllDocuments);
+    var sub2 = subsCache.subscribe(publicationSomeDOcuments);
+
+    assert.equal(Object.keys(subsCache.cache).length, 1);
+    subsCache.onReady(function() {
+      assert.equal(Object.keys(subsCache.cache).length, 1);
+      done();
+    });
+  });
+
+
   it("clears the interval on the removed and stopped sub", function(done) {
-    assert.fail();
+    var subsCache = new SubsCache(100, 1);
+    var sub1 = subsCache.subscribe(publicationAllDocuments);
+
+    subsCache.onReady(function() {
+      assert.isNull(sub1.timerId);
+      sub1.stop();
+      assert.isNotNull(sub1.timerId);
+      var sub2 = subsCache.subscribe(publicationSomeDOcuments);
+      assert.isNull(sub1.timerId);
+      done();
+    });
   });
 });
