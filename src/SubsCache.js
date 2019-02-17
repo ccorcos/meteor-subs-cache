@@ -286,20 +286,22 @@ SubsCache = function(expireAfter, cacheLimit, debug = false) {
 
         // reactively set the allReady reactive variable
         if (this.allReadyComp != null) this.allReadyComp.stop();
-        Tracker.autorun(function(c) {
-          self.allReadyComp = c;
-          let subs = Object.values(self.cache);
-          if (subs.length > 0) {
-            return self.allReady.set(
-              subs
-                .map(function(x) {
-                  return x.ready();
-                })
-                .reduce(function(a, b) {
-                  return a && b;
-                })
-            );
-          }
+        Tracker.nonreactive(() => {
+          Tracker.autorun(function(c) {
+            self.allReadyComp = c;
+            let subs = Object.values(self.cache);
+            if (subs.length > 0) {
+              return self.allReady.set(
+                subs
+                  .map(function(x) {
+                    return x.ready();
+                  })
+                  .reduce(function(a, b) {
+                    return a && b;
+                  })
+              );
+            }
+          });
         });
       }
 
